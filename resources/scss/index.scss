@@ -1,0 +1,108 @@
+.body {
+  margin: 0;
+  padding: 0;
+
+  [data-hidden] {
+    display: none!important;
+  }
+
+  .button {
+    background: #13c2c2;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 4px 8px;
+    user-select: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &-alt {
+      box-shadow: inset 0 0 0 2px #13c2c2;
+      color: #000;
+      cursor: pointer;
+      display: inline-flex;
+      padding: 4px 8px;
+      user-select: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .control {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 5%;
+    user-select: none;
+  }
+
+  .new_entry {
+    align-items: center;
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+
+    &-bg {
+      background: #eeeeee7f;
+      content: "";
+      display: block;
+      height: 100vh;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100vw;
+      z-index: 1;
+    }
+    
+    &-form {
+      background-color: #fff;
+      padding: 8px;
+      position: absolute;
+      width: 300px;
+      z-index: 2;
+
+      label {
+        display: inline-flex;
+        width: 80px;
+      }
+    }
+
+    &-to {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  }
+
+  .display {
+    &-category {
+      &-edit {
+        cursor: pointer;
+        font-size: 0.5em;
+        text-decoration: underline;
+        user-select: none;
+      }
+      &-action {
+        display: inline-flex;
+        &-ok {
+          cursor: pointer;
+          font-size: 0.5em;
+          text-decoration: underline;
+          user-select: none;
+        }
+        &-cancel {
+          cursor: pointer;
+          font-size: 0.5em;
+          text-decoration: underline;
+          user-select: none;
+        }
+      }
+    }
+  }
+}

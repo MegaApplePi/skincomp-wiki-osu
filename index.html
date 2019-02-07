@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8"/>
+    <title>skincompendium-wiki-osu</title>
+    <link rel="stylesheet" href="resources/css/index.css"/>
+  </head>
+  <body class="body">
+    <div class="control">
+      <div>
+        <div class="control-new_category button">New Category</div>
+        <div class="control-import button">Import</div>
+      </div>
+      <div>
+        <div class="control-parse-md button">Parse to Markdown</div>
+        <div class="control-parse-bb button">Parse to BBCode</div>
+        <div class="control-export button">Export to JSON</div>
+      </div>
+    </div>
+    <div class="new_category" data-hidden>
+      <div class="new_category-name">
+        <label for="new_category-name">Name:</label>
+        <input type="text" id="new_category-name"/>
+      </div>
+      <div class="new_category-submit button">
+        <span>Add Category</span>
+      </div>
+      <div class="new_category-cancel button-alt">
+        <span>Cancel</span>
+      </div>
+    </div>
+    <div class="new_entry" data-hidden>
+      <div class="new_entry-bg"></div>
+      <div class="new_entry-form">
+        <div class="new_entry-to"></div>
+        <div class="new_entry-name">
+          <label for="new_entry-name">Name:</label>
+          <input type="text" id="new_entry-name"/>
+        </div>
+        <div class="new_entry-author">
+          <label for="new_entry-author">Author:</label>
+          <input type="text" id="new_entry-author"/>
+        </div>
+        <div class="new_entry-link">
+          <label for="new_entry-link">Link:</label>
+          <input type="text" id="new_entry-link"/>
+        </div>
+        <div class="new_entry-modes">
+          <fieldset>
+            <legend>Modes</legend>
+            <div>
+              <input type="checkbox" id="new_entry-standard"/>
+              <label for="new_entry-standard">osu!</label>
+            </div>
+            <div>
+              <input type="checkbox" id="new_entry-taiko"/>
+              <label for="new_entry-taiko">osu!taiko</label>
+            </div>
+            <div>
+              <input type="checkbox" id="new_entry-catch"/>
+              <label for="new_entry-catch">osu!catch</label>
+            </div>
+            <div>
+              <input type="checkbox" id="new_entry-mania"/>
+              <label for="new_entry-mania">osu!mania</label>
+            </div>
+          </fieldset>
+        </div>
+        <div class="new_entry-submit button">Add Entry</div>
+        <div class="new_entry-cancel button-alt">Cancel</div>
+      </div>
+    </div>
+    <div class="display"></div>
+    <script src="resources/js/index.js" type="module" defer></script>
+  </body>
+</html>

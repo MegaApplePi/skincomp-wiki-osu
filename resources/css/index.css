@@ -1,0 +1,78 @@
+.body {
+  margin: 0;
+  padding: 0; }
+  .body [data-hidden] {
+    display: none !important; }
+  .body .button {
+    background: #13c2c2;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 4px 8px;
+    user-select: none; }
+    .body .button:hover {
+      text-decoration: underline; }
+    .body .button-alt {
+      box-shadow: inset 0 0 0 2px #13c2c2;
+      color: #000;
+      cursor: pointer;
+      display: inline-flex;
+      padding: 4px 8px;
+      user-select: none; }
+      .body .button-alt:hover {
+        text-decoration: underline; }
+  .body .control {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 5%;
+    user-select: none; }
+  .body .new_entry {
+    align-items: center;
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw; }
+    .body .new_entry-bg {
+      background: #eeeeee7f;
+      content: "";
+      display: block;
+      height: 100vh;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100vw;
+      z-index: 1; }
+    .body .new_entry-form {
+      background-color: #fff;
+      padding: 8px;
+      position: absolute;
+      width: 300px;
+      z-index: 2; }
+      .body .new_entry-form label {
+        display: inline-flex;
+        width: 80px; }
+    .body .new_entry-to {
+      font-weight: bold;
+      text-decoration: underline; }
+  .body .display-category-edit {
+    cursor: pointer;
+    font-size: 0.5em;
+    text-decoration: underline;
+    user-select: none; }
+  .body .display-category-action {
+    display: inline-flex; }
+    .body .display-category-action-ok {
+      cursor: pointer;
+      font-size: 0.5em;
+      text-decoration: underline;
+      user-select: none; }
+    .body .display-category-action-cancel {
+      cursor: pointer;
+      font-size: 0.5em;
+      text-decoration: underline;
+      user-select: none; }
+
+/*# sourceMappingURL=index.css.map */
