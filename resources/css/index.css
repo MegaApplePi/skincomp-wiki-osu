@@ -12,6 +12,11 @@
     user-select: none; }
     .body .button:hover {
       text-decoration: underline; }
+    .body .button[data-disabled] {
+      background: #bfbfbf; }
+      .body .button[data-disabled]:hover {
+        cursor: not-allowed;
+        text-decoration: none; }
     .body .button-alt {
       box-shadow: inset 0 0 0 2px #13c2c2;
       color: #000;
@@ -21,12 +26,17 @@
       user-select: none; }
       .body .button-alt:hover {
         text-decoration: underline; }
+      .body .button-alt[data-disabled] {
+        box-shadow: inset 0 0 0 2px #bfbfbf; }
+        .body .button-alt[data-disabled]:hover {
+          cursor: not-allowed;
+          text-decoration: none; }
   .body .control {
     display: flex;
     justify-content: space-between;
     margin: 2px 5%;
     user-select: none; }
-  .body .new_entry {
+  .body .import, .body .new_category, .body .new_entry, .body .edit_entry {
     align-items: center;
     display: flex;
     height: 100vh;
@@ -35,7 +45,7 @@
     left: 0;
     top: 0;
     width: 100vw; }
-    .body .new_entry-bg {
+    .body .import-bg, .body .new_category-bg, .body .new_entry-bg, .body .edit_entry-bg {
       background: #eeeeee7f;
       content: "";
       display: block;
@@ -45,34 +55,40 @@
       top: 0;
       width: 100vw;
       z-index: 1; }
-    .body .new_entry-form {
+    .body .import-form, .body .new_category-form, .body .new_entry-form, .body .edit_entry-form {
       background-color: #fff;
       padding: 8px;
       position: absolute;
-      width: 300px;
+      width: 400px;
       z-index: 2; }
-      .body .new_entry-form label {
+      .body .import-form label, .body .new_category-form label, .body .new_entry-form label, .body .edit_entry-form label {
         display: inline-flex;
-        width: 80px; }
-    .body .new_entry-to {
+        width: 120px; }
+      .body .import-form [data-invalid], .body .new_category-form [data-invalid], .body .new_entry-form [data-invalid], .body .edit_entry-form [data-invalid] {
+        background-color: #fff1f0; }
+    .body .import-to, .body .new_category-to, .body .new_entry-to, .body .edit_entry-to {
       font-weight: bold;
       text-decoration: underline; }
-  .body .display-category-edit {
-    cursor: pointer;
-    font-size: 0.5em;
-    text-decoration: underline;
-    user-select: none; }
-  .body .display-category-action {
-    display: inline-flex; }
-    .body .display-category-action-ok {
-      cursor: pointer;
-      font-size: 0.5em;
-      text-decoration: underline;
-      user-select: none; }
-    .body .display-category-action-cancel {
-      cursor: pointer;
-      font-size: 0.5em;
-      text-decoration: underline;
-      user-select: none; }
+    .body .import-actions, .body .new_category-actions, .body .new_entry-actions, .body .edit_entry-actions {
+      margin-top: 4px; }
+  .body .entry-edit {
+    margin: 0 2px; }
+  .body .display {
+    margin: 0 10%; }
+    .body .display-category-name {
+      font-weight: bold;
+      font-size: 2em; }
+    .body .display-category-edit {
+      font-size: 1rem;
+      margin: 0 2px; }
+    .body .display-category-action {
+      display: inline-flex;
+      font-size: 1rem; }
+      .body .display-category-action-ok {
+        margin: 0 2px; }
+    .body .display-category-delete-confirm {
+      margin-left: 4px; }
+    .body .display-category-delete-no {
+      margin: 0 2px; }
 
 /*# sourceMappingURL=index.css.map */

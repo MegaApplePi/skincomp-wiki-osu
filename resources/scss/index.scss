@@ -18,6 +18,15 @@
       text-decoration: underline;
     }
 
+    &[data-disabled] {
+      background: #bfbfbf;
+
+      &:hover {
+        cursor: not-allowed;
+        text-decoration: none;
+      }
+    }
+
     &-alt {
       box-shadow: inset 0 0 0 2px #13c2c2;
       color: #000;
@@ -29,6 +38,15 @@
       &:hover {
         text-decoration: underline;
       }
+
+      &[data-disabled] {
+        box-shadow: inset 0 0 0 2px #bfbfbf;
+
+        &:hover {
+          cursor: not-allowed;
+          text-decoration: none;
+        }
+      }
     }
   }
 
@@ -39,7 +57,7 @@
     user-select: none;
   }
 
-  .new_entry {
+  .import, .new_category, .new_entry, .edit_entry {
     align-items: center;
     display: flex;
     height: 100vh;
@@ -65,12 +83,16 @@
       background-color: #fff;
       padding: 8px;
       position: absolute;
-      width: 300px;
+      width: 400px;
       z-index: 2;
 
       label {
         display: inline-flex;
-        width: 80px;
+        width: 120px;
+      }
+
+      [data-invalid] {
+        background-color: #fff1f0;
       }
     }
 
@@ -78,29 +100,46 @@
       font-weight: bold;
       text-decoration: underline;
     }
+
+    &-actions {
+      margin-top: 4px;
+    }
   }
 
+  .entry {
+    &-edit {
+      margin: 0 2px;
+    }
+  }
   .display {
+    margin: 0 10%;
     &-category {
-      &-edit {
-        cursor: pointer;
-        font-size: 0.5em;
-        text-decoration: underline;
-        user-select: none;
+      &-name {
+        font-weight: bold;
+        font-size: 2em;
       }
+
+      &-edit {
+        font-size: 1rem;
+        margin: 0 2px;
+      }
+
       &-action {
         display: inline-flex;
+        font-size: 1rem;
+
         &-ok {
-          cursor: pointer;
-          font-size: 0.5em;
-          text-decoration: underline;
-          user-select: none;
+          margin: 0 2px;
         }
-        &-cancel {
-          cursor: pointer;
-          font-size: 0.5em;
-          text-decoration: underline;
-          user-select: none;
+      }
+
+      &-delete {
+        &-confirm {
+          margin-left: 4px;
+        }
+
+        &-no {
+          margin: 0 2px;
         }
       }
     }

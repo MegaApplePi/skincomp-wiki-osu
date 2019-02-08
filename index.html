@@ -12,21 +12,26 @@
         <div class="control-import button">Import</div>
       </div>
       <div>
-        <div class="control-parse-md button">Parse to Markdown</div>
-        <div class="control-parse-bb button">Parse to BBCode</div>
+        <div class="control-parse-md button" data-disabled>Parse to Markdown</div>
+        <div class="control-parse-bb button" data-disabled>Parse to BBCode</div>
         <div class="control-export button">Export to JSON</div>
       </div>
     </div>
     <div class="new_category" data-hidden>
-      <div class="new_category-name">
-        <label for="new_category-name">Name:</label>
-        <input type="text" id="new_category-name"/>
-      </div>
-      <div class="new_category-submit button">
-        <span>Add Category</span>
-      </div>
-      <div class="new_category-cancel button-alt">
-        <span>Cancel</span>
+      <div class="new_category-bg"></div>
+      <div class="new_category-form">
+        <div class="new_category-name">
+          <label for="new_category-name">Category Name*:</label>
+          <input type="text" id="new_category-name"/>
+        </div>
+        <div class="new_category-actions">
+          <div class="new_category-submit button">
+            <span>Add Category</span>
+          </div>
+          <div class="new_category-cancel button-alt">
+            <span>Cancel</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="new_entry" data-hidden>
@@ -34,16 +39,20 @@
       <div class="new_entry-form">
         <div class="new_entry-to"></div>
         <div class="new_entry-name">
-          <label for="new_entry-name">Name:</label>
+          <label for="new_entry-name">Skin Name*:</label>
           <input type="text" id="new_entry-name"/>
         </div>
+        <div class="new_entry-name_link">
+          <label for="new_entry-name_link">Topic* (<span title="Topic ID or link">?</span>):</label>
+          <input type="text" id="new_entry-name_link"/>
+        </div>
         <div class="new_entry-author">
-          <label for="new_entry-author">Author:</label>
+          <label for="new_entry-author">Author*:</label>
           <input type="text" id="new_entry-author"/>
         </div>
-        <div class="new_entry-link">
-          <label for="new_entry-link">Link:</label>
-          <input type="text" id="new_entry-link"/>
+        <div class="new_entry-author_link">
+          <label for="new_entry-author_link">Author Link* (<span title="User ID or link with ID">?</span>):</label>
+          <input type="text" id="new_entry-author_link"/>
         </div>
         <div class="new_entry-modes">
           <fieldset>
@@ -66,9 +75,73 @@
             </div>
           </fieldset>
         </div>
-        <div class="new_entry-submit button">Add Entry</div>
-        <div class="new_entry-cancel button-alt">Cancel</div>
+        <div class="new_entry-actions">
+          <div class="new_entry-submit button">Add Entry</div>
+          <div class="new_entry-cancel button-alt">Cancel</div>
+        </div>
       </div>
+    </div>
+    <div class="edit_entry" data-hidden>
+      <div class="edit_entry-bg"></div>
+      <div class="edit_entry-form">
+        <div class="edit_entry-category">
+          <label for="edit_entry-category">Category*:</label>
+          <select id="edit_entry-category"></select>
+        </div>
+        <div class="edit_entry-name">
+          <label for="edit_entry-name">Name*:</label>
+          <input type="text" id="edit_entry-name"/>
+        </div>
+        <div class="edit_entry-name_link">
+          <label for="edit_entry-name_link">Topic* (<span title="Topic ID or link">?</span>):</label>
+          <input type="text" id="edit_entry-name_link"/>
+        </div>
+        <div class="edit_entry-author">
+          <label for="edit_entry-author">Author*:</label>
+          <input type="text" id="edit_entry-author"/>
+        </div>
+        <div class="edit_entry-author_link">
+          <label for="edit_entry-author_link">Author Link* (<span title="User ID or link with ID">?</span>):</label>
+          <input type="text" id="edit_entry-author_link"/>
+        </div>
+        <div class="edit_entry-modes">
+          <fieldset>
+            <legend>Modes</legend>
+            <div>
+              <input type="checkbox" id="edit_entry-standard"/>
+              <label for="edit_entry-standard">osu!</label>
+            </div>
+            <div>
+              <input type="checkbox" id="edit_entry-taiko"/>
+              <label for="edit_entry-taiko">osu!taiko</label>
+            </div>
+            <div>
+              <input type="checkbox" id="edit_entry-catch"/>
+              <label for="edit_entry-catch">osu!catch</label>
+            </div>
+            <div>
+              <input type="checkbox" id="edit_entry-mania"/>
+              <label for="edit_entry-mania">osu!mania</label>
+            </div>
+          </fieldset>
+        </div>
+        <div class="edit_entry-submit button">Update Entry</div>
+        <div class="edit_entry-reset button-alt">Reset</div>
+        <div class="edit_entry-cancel button-alt">Cancel</div>
+      </div>
+    </div>
+    <div class="import" data-hidden>
+        <div class="import-bg"></div>
+        <div class="import-form">
+          <span>Drop a file anywhere or click below to import:</span>
+          <input type="file" accept="application/json"/>
+        </div>
+    </div>
+    <div class="export" data-hidden>
+        <div class="export-bg"></div>
+        <div class="export-form">
+          <input type="text" id="export-output" readonly/>
+        </div>
     </div>
     <div class="display"></div>
     <script src="resources/js/index.js" type="module" defer></script>
