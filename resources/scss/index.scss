@@ -55,9 +55,17 @@
     justify-content: space-between;
     margin: 2px 5%;
     user-select: none;
+
+    &-locale {
+      display: inline-flex;
+
+      span {
+        margin-right: 2px;
+      }
+    }
   }
 
-  .import, .new_category, .new_entry, .edit_entry {
+  .import, .export, .parse, .new_category, .new_entry, .edit_entry {
     align-items: center;
     display: flex;
     height: 100vh;
@@ -86,9 +94,16 @@
       width: 400px;
       z-index: 2;
 
+      textarea {
+        box-sizing: border-box;
+        height: 200px;
+        resize: none;
+        width: 100%;
+      }
+
       label {
         display: inline-flex;
-        width: 120px;
+        width: 160px;
       }
 
       [data-invalid] {
@@ -104,6 +119,24 @@
     &-actions {
       margin-top: 4px;
     }
+
+    &-status {
+      height: 1.5em;
+      margin-top: 4px;
+
+      &[data-state="error"] {
+        color: #f5222d;
+      }
+    }
+
+    &-save {
+      display: inline-flex;
+    }
+
+    &-grouped {
+      display: flex;
+      justify-content: space-between;
+    }
   }
 
   .entry {
@@ -113,18 +146,25 @@
   }
   .display {
     margin: 0 10%;
+
     &-category {
+      margin-top: 16px;
+
       &-name {
         font-weight: bold;
         font-size: 2em;
       }
 
-      &-edit {
+      &-description {
+        font-style: italic;
+      }
+
+      &-editname, &-editdescription {
         font-size: 1rem;
         margin: 0 2px;
       }
 
-      &-action {
+      &-action, &-nameaction, &-descriptionaction {
         display: inline-flex;
         font-size: 1rem;
 
@@ -143,5 +183,17 @@
         }
       }
     }
+
+    .category {
+      &-entry {
+        li {
+          margin: 2px 0;
+        }
+      }
+    }
   }
+}
+
+#export-output {
+  width: 100%;
 }

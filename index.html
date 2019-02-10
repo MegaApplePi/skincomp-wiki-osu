@@ -12,8 +12,15 @@
         <div class="control-import button">Import</div>
       </div>
       <div>
-        <div class="control-parse-md button" data-disabled>Parse to Markdown</div>
-        <div class="control-parse-bb button" data-disabled>Parse to BBCode</div>
+        <div class="control-locale">
+          <span>Language:</span>
+          <select id="control-locale">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+        <div class="control-parse-md button">Parse to Markdown</div>
+        <div class="control-parse-bb button">Parse to BBCode</div>
         <div class="control-export button">Export to JSON</div>
       </div>
     </div>
@@ -24,6 +31,10 @@
           <label for="new_category-name">Category Name*:</label>
           <input type="text" id="new_category-name"/>
         </div>
+        <div class="new_category-description">
+          <label for="new_category-description">Category Description*:</label>
+          <input type="text" id="new_category-description"/>
+        </div>
         <div class="new_category-actions">
           <div class="new_category-submit button">
             <span>Add Category</span>
@@ -32,6 +43,7 @@
             <span>Cancel</span>
           </div>
         </div>
+        <div class="new_category-status"></div>
       </div>
     </div>
     <div class="new_entry" data-hidden>
@@ -125,23 +137,63 @@
             </div>
           </fieldset>
         </div>
-        <div class="edit_entry-submit button">Update Entry</div>
-        <div class="edit_entry-reset button-alt">Reset</div>
-        <div class="edit_entry-cancel button-alt">Cancel</div>
+        <div class="edit_entry-actions">
+          <div class="edit_entry-submit button">Update Entry</div>
+          <div class="edit_entry-reset button-alt">Reset</div>
+          <div class="edit_entry-cancel button-alt">Cancel</div>
+        </div>
       </div>
     </div>
     <div class="import" data-hidden>
-        <div class="import-bg"></div>
-        <div class="import-form">
-          <span>Drop a file anywhere or click below to import:</span>
-          <input type="file" accept="application/json"/>
+      <div class="import-bg"></div>
+      <div class="import-form">
+        <div>
+          <!-- <span>Drop a valid file anywhere or click below to import:</span> -->
+          <span>Click below to import:</span>
+          <input type="file" accept="application/json" id="import-input"/>
         </div>
+        <div class="import-actions">
+          <div class="import-submit button">Import</div>
+          <div class="import-cancel button-alt">Cancel</div>
+        </div>
+        <div class="import-status"></div>
+      </div>
     </div>
     <div class="export" data-hidden>
-        <div class="export-bg"></div>
-        <div class="export-form">
+      <div class="export-bg"></div>
+      <div class="export-form">
+        <div>
           <input type="text" id="export-output" readonly/>
         </div>
+        <div class="export-actions">
+          <div class="export-save">
+            <a class="export-save-link button" download="skincomp.json">Save</a>
+          </div>
+          <div class="export-copy button-alt">Copy</div>
+          <div class="export-close button-alt">Close</div>
+        </div>
+        <div class="export-status"></div>
+      </div>
+    </div>
+    <div class="parse" data-hidden>
+      <div class="parse-bg"></div>
+      <div class="parse-form">
+        <div>
+          <span>Copy to: <code class="parse-saveto"></code></span>
+          <textarea id="parse-output" readonly></textarea>
+        </div>
+        <div class="parse-actions parse-grouped">
+          <div>
+            <div class="parse-copy button">Copy</div>
+            <div class="parse-close button-alt">Close</div>
+          </div>
+          <div class="parse-nav" data-hidden>
+            <div class="parse-prev button-alt">Previous</div>
+            <div class="parse-next button-alt">Next</div>
+          </div>
+        </div>
+        <div class="parse-status"></div>
+      </div>
     </div>
     <div class="display"></div>
     <script src="resources/js/index.js" type="module" defer></script>
