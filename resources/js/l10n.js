@@ -1,6 +1,9 @@
 import InvalidLocale from "./Error/InvalidLocale.js";
 import strings from "./strings.js";
 class l10n {
+    static getLocale() {
+        return this.locale;
+    }
     static setLocale(locale) {
         if (Object.keys(strings).includes(locale)) {
             this.locale = locale;
@@ -14,9 +17,13 @@ class l10n {
         if (strings[this.locale][string]) {
             return strings[this.locale][string];
         }
-        else {
-            return strings["en"][string];
+        return strings["en"][string];
+    }
+    static localeExists(locale) {
+        if (locale in strings) {
+            return true;
         }
+        return false;
     }
 }
 l10n.locale = "en";

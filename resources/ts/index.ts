@@ -187,7 +187,7 @@ function $newCategorySubmit_click(): void {
 
   if (!hasErrors) {
     try {
-      CompendiumMan.addCategory($newCategoryName.value.trim(), $newCategoryDescription.value.trim());
+      CompendiumMan.addCategory($newCategoryName.value.trim(), $newCategoryDescription.value.trim(), "en");
       updateDisplay();
 
       $newCategory.dataset.hidden = "";
@@ -287,7 +287,11 @@ function $display_click (event: Event): void {
 
     const $spanEdit: HTMLSpanElement = document.createElement("span");
     $spanEdit.classList.add("display-category-editname", "button");
-    $spanEdit.textContent = "edit";
+    if (l10n.getLocale() !== "en") {
+      $spanEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+    } else {
+      $spanEdit.textContent = "edit";
+    }
 
     $name.textContent = $input.value;
     if ($input.dataset.original !== $input.value.trim()) {
@@ -342,11 +346,15 @@ function $display_click (event: Event): void {
 
     const $spanEdit: HTMLSpanElement = document.createElement("span");
     $spanEdit.classList.add("display-category-editdescription", "button");
-    $spanEdit.textContent = "edit";
+    if (l10n.getLocale() !== "en") {
+      $spanEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+    } else {
+      $spanEdit.textContent = "edit";
+    }
 
     $description.textContent = $input.value;
     if ($input.dataset.original !== $input.value.trim()) {
-      CompendiumMan.updateDescription($category.textContent, $input.value);
+      CompendiumMan.updateDescription($category.textContent, $input.value, l10n.getLocale());
       updateDisplay();
     }
 

@@ -2,6 +2,7 @@ import CategoryExistsError from "./Error/CategoryExistsError.js";
 import CategoryNonexistsError from "./Error/CategoryNonexistsError.js";
 import EntryNonexistsError from "./Error/EntryNonexistsError.js";
 import ImportError from "./Error/ImportError.js";
+import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
 import Modes from "./eModes.js";
 class CompendiumMan {
@@ -48,13 +49,19 @@ class CompendiumMan {
             throw new CategoryNonexistsError();
         }
     }
-    static addCategory(name, description) {
+    static addCategory(name, description, locale) {
         if (this.list.categories[name]) {
             throw new CategoryExistsError();
         }
         else {
-            this.list.descriptions[name] = description;
-            this.list.categories[name] = {};
+            if (l10n.localeExists(locale)) {
+                this.list.descriptions[name] = {};
+                this.list.descriptions[name][locale] = description;
+                this.list.categories[name] = {};
+            }
+            else {
+                throw new LocaleNonexistsError();
+            }
         }
     }
     static renameCategory(oldName, newName) {
@@ -81,10 +88,14 @@ class CompendiumMan {
             throw new CategoryNonexistsError();
         }
     }
-    // TODO add locale code (when creating a category, the title and description added will be in English... the user then needs to change the locale and edit the name to set the description in locale)
-    static updateDescription(key, description, locale) {
-        if (this.list.descriptions[key]) {
-            this.list.descriptions[key] = description;
+    static updateDescription(category, description, locale) {
+        if (this.list.descriptions[category]) {
+            if (l10n.localeExists(locale)) {
+                this.list.descriptions[category][locale] = description;
+            }
+            else {
+                throw new LocaleNonexistsError();
+            }
         }
         else {
             throw new CategoryNonexistsError();
@@ -104,6 +115,22 @@ class CompendiumMan {
         else {
             throw new CategoryNonexistsError();
         }
+    }
+    static computeModes(s, t, c, m) {
+        let modes = Modes.None;
+        if (s) {
+            modes |= Modes.Standard;
+        }
+        if (t) {
+            modes |= Modes.Taiko;
+        }
+        if (c) {
+            modes |= Modes.Catch;
+        }
+        if (m) {
+            modes |= Modes.Mania;
+        }
+        return modes;
     }
     static updateEntry(oldCategory, newCategory, id, name, nameLink, author, authorLink, modes) {
         if (this.list.categories[oldCategory]) {
@@ -130,11 +157,10 @@ class CompendiumMan {
     }
     // display methods
     static getDisplay() {
+        const $container = document.createElement("div");
+        $container.classList.add("display-category");
         for (let category in this.list.categories) {
             if (this.list.categories.hasOwnProperty(category)) {
-                // new category container
-                const $container = document.createElement("div");
-                $container.classList.add("display-category");
                 // name
                 const $category = document.createElement("div");
                 $category.classList.add("display-category-head");
@@ -148,7 +174,12 @@ class CompendiumMan {
                 // name -> edit
                 const $nameEdit = document.createElement("span");
                 $nameEdit.classList.add("display-category-editname", "button");
-                $nameEdit.textContent = "edit";
+                if (l10n.getLocale() !== "en") {
+                    $nameEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+                }
+                else {
+                    $nameEdit.textContent = "edit";
+                }
                 $nameGroup.insertAdjacentElement("beforeend", $nameEdit);
                 // name -> delete
                 const $delete = document.createElement("span");
@@ -175,12 +206,22 @@ class CompendiumMan {
                 $category.insertAdjacentElement("beforeend", $descriptionGroup);
                 const $description = document.createElement("span");
                 $description.classList.add("display-category-description");
-                $description.textContent = this.list.descriptions[category];
+                let description = this.list.descriptions[category][l10n.getLocale()];
+                if (!description) {
+                    // use English if selected locale doesn't have one
+                    description = this.list.descriptions[category]["en"];
+                }
+                $description.textContent = description;
                 $descriptionGroup.insertAdjacentElement("beforeend", $description);
                 // description -> edit
                 const $descriptionEdit = document.createElement("span");
                 $descriptionEdit.classList.add("display-category-editdescription", "button");
-                $descriptionEdit.textContent = "edit";
+                if (l10n.getLocale() !== "en") {
+                    $descriptionEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+                }
+                else {
+                    $descriptionEdit.textContent = "edit";
+                }
                 $descriptionGroup.insertAdjacentElement("beforeend", $descriptionEdit);
                 // entries
                 const $entries = document.createElement("ul");
@@ -241,9 +282,9 @@ class CompendiumMan {
                         $entries.insertAdjacentElement("beforeend", $entry);
                     }
                 }
-                return $container;
             }
         }
+        return $container;
     }
 }
 CompendiumMan.list = {
