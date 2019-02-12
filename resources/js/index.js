@@ -150,7 +150,16 @@ class CompendiumMan {
             throw new CategoryNonexistsError();
         }
     }
-    static updateDescription(key, description) {
+    static getDescription(category) {
+        if (this.list.descriptions[category]) {
+            return this.list.descriptions[category];
+        }
+        else {
+            throw new CategoryNonexistsError();
+        }
+    }
+    // TODO add locale code (when creating a category, the title and description added will be in English... the user then needs to change the locale and edit the name to set the description in locale)
+    static updateDescription(key, description, locale) {
         if (this.list.descriptions[key]) {
             this.list.descriptions[key] = description;
         }
@@ -160,7 +169,6 @@ class CompendiumMan {
     }
     // entry methods
     static addEntry(category, name, nameLink, author, authorLink, modes) {
-        // TOFIX need to validate nameLink and authorLink (extract ID if link then check if it is an integer);
         if (this.list.categories[category]) {
             this.list.categories[category][this.getNextId()] = {
                 name,
@@ -274,11 +282,11 @@ class CompendiumMan {
                         const $entry = document.createElement("li");
                         $entry.dataset.id = entry;
                         const $name = document.createElement("a");
-                        $name.href = entryData.nameLink;
+                        $name.href = `https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}`;
                         $name.textContent = entryData.name;
                         $name.target = "_blank";
                         const $author = document.createElement("a");
-                        $author.href = entryData.authorLink;
+                        $author.href = `https://osu.ppy.sh/users/${entryData.authorLink}`;
                         $author.textContent = entryData.author;
                         $author.target = "_blank";
                         let modes = [];
@@ -336,19 +344,27 @@ function $newEntrySubmit_click() {
     else {
         delete $newEntryName.dataset.invalid;
     }
-    if ($newEntryNameLink.value.trim() === "") {
+    // ACCEPT https://osu.ppy.sh/community/forums/topics/#, /community/forums/topics/#, /forum/t/#, or #
+    let nameLink = $newEntryNameLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/(?:community\/)?forums?\/t(?:opics)?\/)?(\d+)$/);
+    if (nameLink) {
+        delete $newEntryNameLink.dataset.invalid;
+        // the second item is the thing we want
+        nameLink = nameLink[1];
+    }
+    else {
         $newEntryNameLink.dataset.invalid = "";
         hasErrors = true;
     }
-    else {
-        delete $newEntryNameLink.dataset.invalid;
+    // ACCEPT https://osu.ppy.sh/users/#, /users/#, /u/#, or #
+    let authorLink = $newEntryNameLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/u(?:sers)?\/)?(\d+)$/);
+    if (authorLink) {
+        delete $newEntryAuthor.dataset.invalid;
+        // the second item is the thing we want
+        authorLink = authorLink[1];
     }
-    if ($newEntryAuthor.value.trim() === "") {
+    else {
         $newEntryAuthor.dataset.invalid = "";
         hasErrors = true;
-    }
-    else {
-        delete $newEntryAuthor.dataset.invalid;
     }
     if ($newEntryAuthorLink.value.trim() === "") {
         $newEntryAuthorLink.dataset.invalid = "";
@@ -373,7 +389,7 @@ function $newEntrySubmit_click() {
         if ($newEntryMania.checked) {
             modes |= Modes.Mania;
         }
-        CompendiumMan.addEntry($newEntry.dataset.categoryName, $newEntryName.value, $newEntryNameLink.value, $newEntryAuthor.value, $newEntryAuthorLink.value, modes);
+        CompendiumMan.addEntry($newEntry.dataset.categoryName, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
         $newEntryName.value = "";
         $newEntryNameLink.value = "";
         $newEntryAuthor.value = "";
@@ -578,9 +594,8 @@ function $display_click(event) {
         try {
             CompendiumMan.deleteCategory(target.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.textContent);
         }
-        catch (ex) {
-            // TODO display error
-            console.error("Failed to delete (did you modify the document?)");
+        catch (_a) {
+            window.alert("Failed to delete (did you modify the document?)\nIf not, try exporting, reload, importing, then delete.");
         }
     }
     else if (target.classList.contains("display-category-add_entry")) {
@@ -638,23 +653,22 @@ function $controlImport_click() {
 }
 $controlImport.addEventListener("click", $controlImport_click);
 const importReader = new FileReader();
-function importReader_load(event) {
+function importReader_load() {
     try {
         let result = JSON.parse(importReader.result.toString());
         CompendiumMan.import(result);
+        $import.dataset.hidden = "";
+        $importInput.value = "";
     }
-    catch (_a) {
-        // TODO error message for this
-        console.error("failed");
+    catch (ex) {
+        $importStatus.textContent = `Import error: ${ex.message}`;
     }
 }
 importReader.addEventListener("load", importReader_load);
 function $importSubmit_click() {
     if ($importInput.files[0]) {
         if ($importInput.files[0].type === "application/json") {
-            $import.dataset.hidden = "";
             importReader.readAsText($importInput.files[0]);
-            $importInput.value = "";
         }
         else {
             $importStatus.textContent = "Invalid file type.";
@@ -690,29 +704,31 @@ function $exportSave_click() {
 }
 $exportSaveLink.addEventListener("click", $exportSave_click);
 function $exportCopy_click() {
-    if ("clipboard" in navigator) {
-        navigator.clipboard.writeText($exportOutput.value)
-            .then(() => {
-            $exportCopy.dataset.disabled = "";
-            $exportStatus.textContent = "Copied.";
-        })
-            .catch(() => {
-            $exportCopy.dataset.disabled = "";
-            $exportStatus.textContent = "Failed to copy (please manually copy from above).";
-            $exportStatus.dataset.state = "error";
-        });
-    }
-    else {
-        try {
-            $exportOutput.select();
-            document.execCommand("copy");
-            $exportCopy.dataset.disabled = "";
-            $exportStatus.textContent = "Copied.";
+    if (!$exportCopy.hasAttribute("data-hidden")) {
+        if ("clipboard" in navigator) {
+            navigator.clipboard.writeText($exportOutput.value)
+                .then(() => {
+                $exportCopy.dataset.disabled = "";
+                $exportStatus.textContent = "Copied.";
+            })
+                .catch(() => {
+                $exportCopy.dataset.disabled = "";
+                $exportStatus.textContent = "Failed to copy (please manually copy from above).";
+                $exportStatus.dataset.state = "error";
+            });
         }
-        catch (_a) {
-            $exportCopy.dataset.disabled = "";
-            $exportStatus.textContent = "Failed to copy (please manually copy from above).";
-            $exportStatus.dataset.state = "error";
+        else {
+            try {
+                $exportOutput.select();
+                document.execCommand("copy");
+                $exportCopy.dataset.disabled = "";
+                $exportStatus.textContent = "Copied.";
+            }
+            catch (_a) {
+                $exportCopy.dataset.disabled = "";
+                $exportStatus.textContent = "Failed to copy (please manually copy from above).";
+                $exportStatus.dataset.state = "error";
+            }
         }
     }
 }
@@ -764,7 +780,7 @@ function $controlParseMd_click() {
     for (let category in sortedList) {
         if (sortedList.hasOwnProperty(category)) {
             listIndex++;
-            files.push({ "category": category, "text": `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${category}\n` });
+            files.push({ "category": category, "text": `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${category}\n\n${CompendiumMan.getDescription(category)}\n` });
             for (let categoryKey of sortedList[category].sortedCategories) {
                 files[listIndex].text += `\n## ${categoryKey}\n\n| Modes |  |\n|---|---|\n`;
                 for (let item in sortedList[category][categoryKey]) {
@@ -789,7 +805,9 @@ function $controlParseMd_click() {
             }
         }
     }
-    $parseOutput.textContent = files[0].text;
+    if (files[0]) {
+        $parseOutput.textContent = files[0].text;
+    }
 }
 $controlParseMd.addEventListener("click", $controlParseMd_click);
 function $controlParseBb_click() {
@@ -801,8 +819,7 @@ function $controlParseBb_click() {
     for (let category in sortedList) {
         if (sortedList.hasOwnProperty(category)) {
             listIndex++;
-            // TODO category descriptions
-            files.push({ "category": category, "text": `[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] means the skin contains osu!standard elements\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] means the skin contains osu!taiko elements\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] means the skin contains osu!catch elements\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] means the skin contains osu!mania elements[/list]` });
+            files.push({ "category": category, "text": `${CompendiumMan.getDescription(category)}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]` });
             let items = list.categories[category];
             let groupedItems = {};
             // TODO sort when adding to CompendiumMan (and use an array)
@@ -839,14 +856,16 @@ function $controlParseBb_click() {
                         if (entryData.modes & Modes.Mania) {
                             modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img]");
                         }
-                        files[listIndex].text += `[url=https://osu.ppy.sh/users/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/community/forums/topics/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;
+                        files[listIndex].text += `[url=https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/users/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;
                     }
                 }
                 files[listIndex].text += "[/notice]";
             }
         }
     }
-    $parseOutput.textContent = files[0].text;
+    if (files[0]) {
+        $parseOutput.textContent = files[0].text;
+    }
     if (files.length > 1) {
         delete $parseNav.dataset.hidden;
     }
@@ -854,12 +873,40 @@ function $controlParseBb_click() {
 $controlParseBb.addEventListener("click", $controlParseBb_click);
 // parse window events
 function $parseCopy_click() {
-    // TODO
+    if (!$parseCopy.hasAttribute("data-disabled")) {
+        if ("clipboard" in navigator) {
+            navigator.clipboard.writeText($parseOutput.value)
+                .then(() => {
+                $parseCopy.dataset.disabled = "";
+                $parseStatus.textContent = "Copied.";
+            })
+                .catch(() => {
+                $parseCopy.dataset.disabled = "";
+                $parseStatus.textContent = "Failed to copy (please manually copy from above).";
+                $parseStatus.dataset.state = "error";
+            });
+        }
+        else {
+            try {
+                $parseOutput.select();
+                document.execCommand("copy");
+                $parseCopy.dataset.disabled = "";
+                $parseStatus.textContent = "Copied.";
+            }
+            catch (_a) {
+                $parseCopy.dataset.disabled = "";
+                $parseStatus.textContent = "Failed to copy (please manually copy from above).";
+                $parseStatus.dataset.state = "error";
+            }
+        }
+    }
 }
 $parseCopy.addEventListener("click", $parseCopy_click);
 function $parseClose_click() {
     $parse.dataset.hidden = "";
     $parseStatus.textContent = "";
+    delete $parseCopy.dataset.disabled;
+    delete $parseStatus.dataset.state;
 }
 $parseClose.addEventListener("click", $parseClose_click);
 function $parsePrev_click() {
@@ -880,4 +927,9 @@ function $controlLocale_change() {
     }
 }
 $controlLocale.addEventListener("change", $controlLocale_change);
+function window_beforeunload(event) {
+    event.preventDefault();
+    event.returnValue = '';
+}
+window.addEventListener("beforeunload", window_beforeunload);
 //# sourceMappingURL=index.js.map
