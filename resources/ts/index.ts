@@ -133,20 +133,7 @@ function $newEntrySubmit_click(): void {
   if (!hasErrors) {
     $newEntry.dataset.hidden = "";
 
-    let modes: Modes = Modes.None;
-    // TODO make this part of CompendiumMan
-    if ($newEntryStandard.checked) {
-      modes |= Modes.Standard;
-    }
-    if ($newEntryTaiko.checked) {
-      modes |= Modes.Taiko;
-    }
-    if ($newEntryCatch.checked) {
-      modes |= Modes.Catch;
-    }
-    if ($newEntryMania.checked) {
-      modes |= Modes.Mania;
-    }
+    let modes: Modes = CompendiumMan.computeModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
 
     CompendiumMan.addEntry($newEntry.dataset.categoryName, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
     updateDisplay();
@@ -235,19 +222,7 @@ function resetEditEntry(): void {
 }
 
 function $editEntrySubmit_click(): void {
-  let modes: Modes = Modes.None;
-  if ($editEntryStandard.checked) {
-    modes |= Modes.Standard;
-  }
-  if ($editEntryTaiko.checked) {
-    modes |= Modes.Taiko;
-  }
-  if ($editEntryCatch.checked) {
-    modes |= Modes.Catch;
-  }
-  if ($editEntryMania.checked) {
-    modes |= Modes.Mania;
-  }
+  let modes: Modes = CompendiumMan.computeModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
 
   CompendiumMan.updateEntry($editEntry.dataset.categoryName, $editEntryCategory.value, $editEntry.dataset.entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
   updateDisplay();

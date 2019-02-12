@@ -117,6 +117,28 @@ abstract class CompendiumMan {
     }
   }
 
+  public static computeModes(s: boolean, t: boolean, c: boolean, m: boolean): Modes {
+    let modes: Modes = Modes.None;
+
+    if (s) {
+      modes |= Modes.Standard;
+    }
+
+    if (t) {
+      modes |= Modes.Taiko;
+    }
+
+    if (c) {
+      modes |= Modes.Catch;
+    }
+
+    if (m) {
+      modes |= Modes.Mania;
+    }
+
+    return modes;
+  }
+
   public static updateEntry(oldCategory: string, newCategory: string, id: string|number, name: string, nameLink: string, author: string, authorLink: string, modes: Modes): void {
     if (this.list.categories[oldCategory]) {
       if (this.list.categories[oldCategory][id]) {
