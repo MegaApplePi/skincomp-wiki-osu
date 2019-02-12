@@ -1,8 +1,6 @@
-import CategoryExistsError from "./Error/CategoryExistsError.js";
-import CategoryNonexistsError from "./Error/CategoryNonexistsError.js";
-import EntryNonexistsError from "./Error/EntryNonexistsError.js";
-import ImportError from "./Error/ImportError.js";
+import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
+import Modes from "./eModes.js";
 /* DOM elements */
 // containers
 const $newEntry = document.querySelector(".new_entry");
@@ -69,270 +67,12 @@ const $parseNav = document.querySelector(".parse-nav");
 const $parsePrev = document.querySelector(".parse-prev");
 const $parseNext = document.querySelector(".parse-next");
 const $parseStatus = document.querySelector(".parse-status");
-/* classes */
-var Modes;
-(function (Modes) {
-    Modes[Modes["None"] = 0] = "None";
-    Modes[Modes["Standard"] = 1] = "Standard";
-    Modes[Modes["Taiko"] = 2] = "Taiko";
-    Modes[Modes["Catch"] = 4] = "Catch";
-    Modes[Modes["Mania"] = 8] = "Mania";
-})(Modes || (Modes = {}));
-class CompendiumMan {
-    static getList() {
-        return this.list;
+function updateDisplay() {
+    while ($display.firstChild) {
+        $display.firstChild.remove();
     }
-    static getEntryData(categoryName, key) {
-        if (this.list.categories[categoryName]) {
-            if (this.list.categories[categoryName][key]) {
-                return this.list.categories[categoryName][key];
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static getCategories() {
-        return Object.keys(this.list.categories).sort();
-    }
-    static getNextId() {
-        return this.list.nextId++;
-    }
-    static import(input) {
-        try {
-            this.list = input;
-            this.updateDisplay();
-        }
-        catch (ex) {
-            throw new ImportError(ex);
-        }
-    }
-    static export() {
-        return JSON.stringify(this.list);
-    }
-    // category methods
-    static deleteCategory(name) {
-        if (this.list.categories[name]) {
-            delete this.list.categories[name];
-            delete this.list.descriptions[name];
-            this.updateDisplay();
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static addCategory(name, description) {
-        if (this.list.categories[name]) {
-            throw new CategoryExistsError();
-        }
-        else {
-            this.list.descriptions[name] = description;
-            this.list.categories[name] = {};
-        }
-        this.updateDisplay();
-    }
-    static renameCategory(oldName, newName) {
-        if (this.list.categories[oldName]) {
-            if (this.list.categories[newName]) {
-                throw new CategoryExistsError();
-            }
-            else {
-                this.list.categories[newName] = Object.assign({}, this.list.categories[oldName]);
-                this.list.descriptions[newName] = this.list.descriptions[oldName];
-                delete this.list.categories[oldName];
-                delete this.list.descriptions[oldName];
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static getDescription(category) {
-        if (this.list.descriptions[category]) {
-            return this.list.descriptions[category];
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    // TODO add locale code (when creating a category, the title and description added will be in English... the user then needs to change the locale and edit the name to set the description in locale)
-    static updateDescription(key, description, locale) {
-        if (this.list.descriptions[key]) {
-            this.list.descriptions[key] = description;
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    // entry methods
-    static addEntry(category, name, nameLink, author, authorLink, modes) {
-        if (this.list.categories[category]) {
-            this.list.categories[category][this.getNextId()] = {
-                name,
-                nameLink,
-                author,
-                authorLink,
-                modes
-            };
-            this.updateDisplay();
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static updateEntry(oldCategory, newCategory, id, name, nameLink, author, authorLink, modes) {
-        if (this.list.categories[oldCategory]) {
-            if (this.list.categories[oldCategory][id]) {
-                this.list.categories[oldCategory][id] = {
-                    name,
-                    nameLink,
-                    author,
-                    authorLink,
-                    modes
-                };
-                if (newCategory !== oldCategory) {
-                    this.list.categories[newCategory][id] = Object.assign({}, this.list.categories[oldCategory][id]);
-                    delete this.list.categories[oldCategory][id];
-                }
-                this.updateDisplay();
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    // display methods
-    static updateDisplay() {
-        while ($display.firstChild) {
-            $display.firstChild.remove();
-        }
-        for (let category in this.list.categories) {
-            if (this.list.categories.hasOwnProperty(category)) {
-                // new category container
-                const $div = document.createElement("div");
-                $div.classList.add("display-category");
-                // name
-                const $category = document.createElement("div");
-                $category.classList.add("display-category-head");
-                const $nameGroup = document.createElement("div");
-                $nameGroup.classList.add("display-category-group");
-                $category.insertAdjacentElement("beforeend", $nameGroup);
-                const $name = document.createElement("span");
-                $name.classList.add("display-category-name");
-                $name.textContent = category;
-                $nameGroup.insertAdjacentElement("beforeend", $name);
-                // name -> edit
-                const $nameEdit = document.createElement("span");
-                $nameEdit.classList.add("display-category-editname", "button");
-                $nameEdit.textContent = "edit";
-                $nameGroup.insertAdjacentElement("beforeend", $nameEdit);
-                // name -> delete
-                const $delete = document.createElement("span");
-                $delete.classList.add("display-category-delete", "button-alt");
-                $delete.textContent = "delete";
-                $nameGroup.insertAdjacentElement("beforeend", $delete);
-                // name -> delete -> confirm
-                const $deleteConfirm = document.createElement("span");
-                $deleteConfirm.classList.add("display-category-delete-confirm");
-                $deleteConfirm.dataset.hidden = "";
-                $deleteConfirm.textContent = "Really (irreversible)?";
-                $nameGroup.insertAdjacentElement("beforeend", $deleteConfirm);
-                const $deleteNo = document.createElement("span");
-                $deleteNo.classList.add("display-category-delete-no", "button");
-                $deleteNo.textContent = "No, whoops";
-                $deleteConfirm.insertAdjacentElement("beforeend", $deleteNo);
-                const $deleteYes = document.createElement("span");
-                $deleteYes.classList.add("display-category-delete-yes", "button-alt");
-                $deleteYes.textContent = "Yes, delete";
-                $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
-                // description
-                const $descriptionGroup = document.createElement("div");
-                $descriptionGroup.classList.add("display-category-group");
-                $category.insertAdjacentElement("beforeend", $descriptionGroup);
-                const $description = document.createElement("span");
-                $description.classList.add("display-category-description");
-                $description.textContent = this.list.descriptions[category];
-                $descriptionGroup.insertAdjacentElement("beforeend", $description);
-                // description -> edit
-                const $descriptionEdit = document.createElement("span");
-                $descriptionEdit.classList.add("display-category-editdescription", "button");
-                $descriptionEdit.textContent = "edit";
-                $descriptionGroup.insertAdjacentElement("beforeend", $descriptionEdit);
-                // entries
-                const $entries = document.createElement("ul");
-                $entries.classList.add("category-entry");
-                const $addEntry = document.createElement("div");
-                $addEntry.classList.add("display-category-add_entry", "button");
-                $addEntry.textContent = "Add Entry";
-                $addEntry.dataset.categoryName = category;
-                $div.insertAdjacentElement("beforeend", $category);
-                $div.insertAdjacentElement("beforeend", $entries);
-                $div.insertAdjacentElement("beforeend", $addEntry);
-                $display.insertAdjacentElement("beforeend", $div);
-                for (let entry in this.list.categories[category]) {
-                    if (this.list.categories[category].hasOwnProperty(entry)) {
-                        const entryData = this.list.categories[category][entry];
-                        // display the entry
-                        const $entry = document.createElement("li");
-                        $entry.dataset.id = entry;
-                        const $name = document.createElement("a");
-                        $name.href = `https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}`;
-                        $name.textContent = entryData.name;
-                        $name.target = "_blank";
-                        const $author = document.createElement("a");
-                        $author.href = `https://osu.ppy.sh/users/${entryData.authorLink}`;
-                        $author.textContent = entryData.author;
-                        $author.target = "_blank";
-                        let modes = [];
-                        if (entryData.modes & Modes.Standard) {
-                            modes.push("S");
-                        }
-                        if (entryData.modes & Modes.Taiko) {
-                            modes.push("T");
-                        }
-                        if (entryData.modes & Modes.Catch) {
-                            modes.push("C");
-                        }
-                        if (entryData.modes & Modes.Mania) {
-                            modes.push("M");
-                        }
-                        const $modes = document.createElement("span");
-                        $modes.textContent = modes.join(" ");
-                        $entry.insertAdjacentElement("beforeend", $name);
-                        $entry.insertAdjacentText("beforeend", ` ${l10n.getString("by")} `);
-                        $entry.insertAdjacentElement("beforeend", $author);
-                        if (modes.length > 0) {
-                            $entry.insertAdjacentText("beforeend", " - ");
-                            $entry.insertAdjacentElement("beforeend", $modes);
-                        }
-                        // edit button
-                        const $edit = document.createElement("span");
-                        $edit.classList.add("entry-edit", "button");
-                        $edit.textContent = "edit";
-                        $entry.insertAdjacentElement("beforeend", $edit);
-                        // delete button
-                        const $delete = document.createElement("span");
-                        $delete.classList.add("entry-delete", "button-alt");
-                        $delete.textContent = "delete";
-                        $entry.insertAdjacentElement("beforeend", $delete);
-                        $entries.insertAdjacentElement("beforeend", $entry);
-                    }
-                }
-            }
-        }
-    }
+    $display.insertAdjacentElement("beforeend", CompendiumMan.getDisplay());
 }
-CompendiumMan.list = {
-    "nextId": 0,
-    "categories": {},
-    "descriptions": {}
-};
 /* events */
 // new entries
 function $newEntrySubmit_click() {
@@ -390,6 +130,7 @@ function $newEntrySubmit_click() {
             modes |= Modes.Mania;
         }
         CompendiumMan.addEntry($newEntry.dataset.categoryName, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
+        updateDisplay();
         $newEntryName.value = "";
         $newEntryNameLink.value = "";
         $newEntryAuthor.value = "";
@@ -434,6 +175,7 @@ function $newCategorySubmit_click() {
     if (!hasErrors) {
         try {
             CompendiumMan.addCategory($newCategoryName.value.trim(), $newCategoryDescription.value.trim());
+            updateDisplay();
             $newCategory.dataset.hidden = "";
             $newCategoryName.value = "";
             $newCategoryDescription.value = "";
@@ -478,6 +220,7 @@ function $editEntrySubmit_click() {
         modes |= Modes.Mania;
     }
     CompendiumMan.updateEntry($editEntry.dataset.categoryName, $editEntryCategory.value, $editEntry.dataset.entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
+    updateDisplay();
     resetEditEntry();
     $editEntry.dataset.hidden = "";
 }
@@ -531,6 +274,7 @@ function $display_click(event) {
         $name.textContent = $input.value;
         if ($input.dataset.original !== $input.value.trim()) {
             CompendiumMan.renameCategory($input.dataset.original, $input.value);
+            updateDisplay();
         }
         $input.replaceWith($name);
         target.parentElement.replaceWith($spanEdit);
@@ -576,6 +320,7 @@ function $display_click(event) {
         $description.textContent = $input.value;
         if ($input.dataset.original !== $input.value.trim()) {
             CompendiumMan.updateDescription($category.textContent, $input.value);
+            updateDisplay();
         }
         $input.replaceWith($description);
         target.parentElement.replaceWith($spanEdit);
@@ -593,9 +338,10 @@ function $display_click(event) {
     else if (target.classList.contains("display-category-delete-yes")) {
         try {
             CompendiumMan.deleteCategory(target.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.textContent);
+            updateDisplay();
         }
         catch (_a) {
-            window.alert("Failed to delete (did you modify the document?)\nIf not, try exporting, reload, importing, then delete.");
+            window.alert("Failed to delete. Did you modify the document?\nIf not, try exporting, reload, importing, then delete.");
         }
     }
     else if (target.classList.contains("display-category-add_entry")) {
@@ -657,6 +403,7 @@ function importReader_load() {
     try {
         let result = JSON.parse(importReader.result.toString());
         CompendiumMan.import(result);
+        updateDisplay();
         $import.dataset.hidden = "";
         $importInput.value = "";
     }
@@ -691,8 +438,8 @@ function $importCancel_click() {
 $importCancel.addEventListener("click", $importCancel_click);
 // export events
 function $controlExport_click() {
-    delete $export.dataset.hidden;
     $exportOutput.value = CompendiumMan.export();
+    delete $export.dataset.hidden;
     delete $exportCopy.dataset.disabled;
     delete $exportStatus.dataset.state;
     $exportStatus.textContent = "";
@@ -920,7 +667,7 @@ $parseNext.addEventListener("click", $parseNext_click);
 function $controlLocale_change() {
     try {
         l10n.setLocale($controlLocale.value);
-        CompendiumMan.updateDisplay();
+        updateDisplay();
     }
     catch (ex) {
         $controlLocale.value = "en";
