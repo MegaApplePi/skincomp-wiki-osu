@@ -144,6 +144,15 @@
     &-edit {
       margin: 0 2px;
     }
+    &-delete {
+      &-confirm {
+        margin-left: 4px;
+      }
+
+      &-no {
+        margin: 0 2px;
+      }
+    }
   }
   .display {
     margin: 0 10%;

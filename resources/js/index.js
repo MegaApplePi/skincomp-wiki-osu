@@ -398,6 +398,28 @@ function $display_click(event) {
         }
         delete $editEntry.dataset.hidden;
     }
+    else if (target.classList.contains("entry-delete")) {
+        target.dataset.disabled = "";
+        target.previousElementSibling.dataset.disabled = "";
+        delete target.nextElementSibling.dataset.hidden;
+    }
+    else if (target.classList.contains("entry-delete-no")) {
+        delete target.parentElement.previousElementSibling.dataset.disabled;
+        delete target.parentElement.previousElementSibling.previousElementSibling.dataset.disabled;
+        target.parentElement.dataset.hidden = "";
+    }
+    else if (target.classList.contains("entry-delete-yes")) {
+        try {
+            let categoryId = parseInt(target.parentElement.parentElement.parentElement.parentElement.dataset.categoryId, 10);
+            let entryId = parseInt(target.parentElement.parentElement.dataset.id, 10);
+            CompendiumMan.deleteEntry(categoryId, entryId);
+            updateDisplay();
+        }
+        catch (ex) {
+            // TODO make this a better message
+            window.alert(`Failed to delete: ${ex}`);
+        }
+    }
 }
 $display.addEventListener("click", $display_click);
 // import events
@@ -492,6 +514,7 @@ function $exportClose_click() {
     $export.dataset.hidden = "";
 }
 $exportClose.addEventListener("click", $exportClose_click);
+// parse to events
 var eOutputType;
 (function (eOutputType) {
     eOutputType[eOutputType["Markdown"] = 0] = "Markdown";
@@ -502,19 +525,27 @@ function parseList(kind) {
     let files = [];
     const sortedList = CompendiumMan.organizeList();
     for (let item of sortedList) {
+        let name = item.category.name[l10n.currentLocale];
+        if (!name) {
+            name = item.category.name["en"];
+        }
+        let description = item.category.description[l10n.currentLocale];
+        if (!description) {
+            description = item.category.description["en"];
+        }
         let parsedFile = {
-            "category": item.category.name[l10n.currentLocale],
+            "category": name,
             "text": ""
         };
         if (kind === eOutputType.Markdown) {
-            parsedFile.text += `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${item.category.name[l10n.currentLocale]}\n\n${item.category.description[l10n.currentLocale]}\n`;
+            parsedFile.text += `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${name}\n\n${description}\n`;
         }
         else {
-            parsedFile.text += `${item.category.description[l10n.currentLocale]}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`;
+            parsedFile.text += `${description}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`;
         }
         for (let section of Object.keys(item.entries)) {
             if (kind === eOutputType.Markdown) {
-                parsedFile.text += `\n## ${section}\n\n| Modes |  |\n|---|---|\n`;
+                parsedFile.text += `\n## ${section}\n\n| ${l10n.getString("Modes")} |  |\n|---|---|\n`;
             }
             else {
                 parsedFile.text += "[notice]";

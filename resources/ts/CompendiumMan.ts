@@ -17,9 +17,10 @@ interface CategoryIdNameList {
 
 abstract class CompendiumMan {
   private static list: CompendiumList = {
+    "categories": [],
+    "_version": 1,
     "nextEntryId": 0,
-    "nextCategoryId": 0,
-    "categories": []
+    "nextCategoryId": 0
   };
 
   public static get List(): CompendiumList {
@@ -104,6 +105,7 @@ abstract class CompendiumMan {
   // import and export
   public static import(input: CompendiumList): void {
     try {
+      // TODO make sure all expected keys exist
       this.list = input;
     } catch (ex) {
       throw new ImportError(ex);
@@ -253,6 +255,21 @@ abstract class CompendiumMan {
     }
   }
 
+  public static deleteEntry(categoryId: number, entryId: number) {
+    if (this.hasCategoryById(categoryId)) {
+      if (this.hasEntityById(entryId)) {
+        let index = this.getCategoryById(categoryId).entries.findIndex((item) => {
+          return item.id === entryId;
+        });
+        this.getCategoryById(categoryId).entries.splice(index, 1);
+      } else {
+        throw new EntryNonexistsError();
+      }
+    } else {
+      throw new CategoryNonexistsError();
+    }
+  }
+
   public static updateEntry(oldCategoryId: number, newCategoryId: number, entryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
     if (this.hasCategoryById(oldCategoryId)) {
       if (this.hasEntityById(entryId)) {
@@ -359,7 +376,7 @@ abstract class CompendiumMan {
       const $deleteConfirm: HTMLSpanElement = document.createElement("span");
       $deleteConfirm.classList.add("display-category-delete-confirm");
       $deleteConfirm.dataset.hidden = "";
-      $deleteConfirm.textContent = "Really (irreversible)?";
+      $deleteConfirm.textContent = "Confirm:";
       $nameGroup.insertAdjacentElement("beforeend", $deleteConfirm);
 
       const $deleteNo: HTMLSpanElement = document.createElement("span");
@@ -461,6 +478,23 @@ abstract class CompendiumMan {
         $delete.classList.add("entry-delete", "button-alt");
         $delete.textContent = "delete";
         $entry.insertAdjacentElement("beforeend", $delete);
+
+        // delete -> confirm
+        const $deleteConfirm: HTMLSpanElement = document.createElement("span");
+        $deleteConfirm.classList.add("entry-delete-confirm");
+        $deleteConfirm.dataset.hidden = "";
+        $deleteConfirm.textContent = "Confirm:";
+        $entry.insertAdjacentElement("beforeend", $deleteConfirm);
+  
+        const $deleteNo: HTMLSpanElement = document.createElement("span");
+        $deleteNo.classList.add("entry-delete-no", "button");
+        $deleteNo.textContent = "No, whoops";
+        $deleteConfirm.insertAdjacentElement("beforeend", $deleteNo);
+  
+        const $deleteYes: HTMLSpanElement = document.createElement("span");
+        $deleteYes.classList.add("entry-delete-yes", "button-alt");
+        $deleteYes.textContent = "Yes, delete";
+        $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
 
         $entries.insertAdjacentElement("beforeend", $entry);
       }

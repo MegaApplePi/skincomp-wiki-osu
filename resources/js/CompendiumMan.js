@@ -79,6 +79,7 @@ class CompendiumMan {
     // import and export
     static import(input) {
         try {
+            // TODO make sure all expected keys exist
             this.list = input;
         }
         catch (ex) {
@@ -221,6 +222,22 @@ class CompendiumMan {
             throw new CategoryNonexistsError();
         }
     }
+    static deleteEntry(categoryId, entryId) {
+        if (this.hasCategoryById(categoryId)) {
+            if (this.hasEntityById(entryId)) {
+                let index = this.getCategoryById(categoryId).entries.findIndex((item) => {
+                    return item.id === entryId;
+                });
+                this.getCategoryById(categoryId).entries.splice(index, 1);
+            }
+            else {
+                throw new EntryNonexistsError();
+            }
+        }
+        else {
+            throw new CategoryNonexistsError();
+        }
+    }
     static updateEntry(oldCategoryId, newCategoryId, entryId, name, nameLink, author, authorLink, modes) {
         if (this.hasCategoryById(oldCategoryId)) {
             if (this.hasEntityById(entryId)) {
@@ -313,7 +330,7 @@ class CompendiumMan {
             const $deleteConfirm = document.createElement("span");
             $deleteConfirm.classList.add("display-category-delete-confirm");
             $deleteConfirm.dataset.hidden = "";
-            $deleteConfirm.textContent = "Really (irreversible)?";
+            $deleteConfirm.textContent = "Confirm:";
             $nameGroup.insertAdjacentElement("beforeend", $deleteConfirm);
             const $deleteNo = document.createElement("span");
             $deleteNo.classList.add("display-category-delete-no", "button");
@@ -399,6 +416,20 @@ class CompendiumMan {
                 $delete.classList.add("entry-delete", "button-alt");
                 $delete.textContent = "delete";
                 $entry.insertAdjacentElement("beforeend", $delete);
+                // delete -> confirm
+                const $deleteConfirm = document.createElement("span");
+                $deleteConfirm.classList.add("entry-delete-confirm");
+                $deleteConfirm.dataset.hidden = "";
+                $deleteConfirm.textContent = "Confirm:";
+                $entry.insertAdjacentElement("beforeend", $deleteConfirm);
+                const $deleteNo = document.createElement("span");
+                $deleteNo.classList.add("entry-delete-no", "button");
+                $deleteNo.textContent = "No, whoops";
+                $deleteConfirm.insertAdjacentElement("beforeend", $deleteNo);
+                const $deleteYes = document.createElement("span");
+                $deleteYes.classList.add("entry-delete-yes", "button-alt");
+                $deleteYes.textContent = "Yes, delete";
+                $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
                 $entries.insertAdjacentElement("beforeend", $entry);
             }
         }
@@ -406,9 +437,10 @@ class CompendiumMan {
     }
 }
 CompendiumMan.list = {
+    "categories": [],
+    "_version": 1,
     "nextEntryId": 0,
-    "nextCategoryId": 0,
-    "categories": []
+    "nextCategoryId": 0
 };
 export default CompendiumMan;
 //# sourceMappingURL=CompendiumMan.js.map
