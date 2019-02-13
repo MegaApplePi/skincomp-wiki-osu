@@ -4,7 +4,7 @@ import strings from "./strings.js";
 abstract class l10n {
   private static locale = "en";
 
-  public static getLocale() {
+  public static get currentLocale() {
     return this.locale;
   }
 
@@ -24,7 +24,7 @@ abstract class l10n {
     return strings["en"][string];
   }
 
-  public static localeExists(locale: string): boolean {
+  public static hasLocale(locale: string): boolean {
     if (locale in strings) {
       return true;
     }

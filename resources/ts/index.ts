@@ -1,7 +1,7 @@
 import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
-import Modes from "./eModes.js";
-import EntryData from "./iEntryData.js";
+import eModes from "./eModes.js";
+import iEntryData from "./iEntryData.js";
 import CompendiumList from "./iCompendiumList.js";
 
 /* DOM elements */
@@ -110,32 +110,34 @@ function $newEntrySubmit_click(): void {
     $newEntryNameLink.dataset.invalid = "";
     hasErrors = true;
   }
+  
+  if ($newEntryAuthor.value.trim() === "") {
+    $newEntryAuthor.dataset.invalid = "";
+    hasErrors = true;
+  } else {
+    delete $newEntryAuthor.dataset.invalid;
+  }
 
   // ACCEPT https://osu.ppy.sh/users/#, /users/#, /u/#, or #
   let authorLink = $newEntryNameLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/u(?:sers)?\/)?(\d+)$/);
   if (authorLink) {
-    delete $newEntryAuthor.dataset.invalid;
+    delete $newEntryAuthorLink.dataset.invalid;
 
     // the second item is the thing we want
     authorLink = authorLink[1];
   } else {
-    $newEntryAuthor.dataset.invalid = "";
-    hasErrors = true;
-  }
-  
-  if ($newEntryAuthorLink.value.trim() === "") {
     $newEntryAuthorLink.dataset.invalid = "";
     hasErrors = true;
-  } else {
-    delete $newEntryAuthorLink.dataset.invalid;
   }
 
   if (!hasErrors) {
     $newEntry.dataset.hidden = "";
 
-    let modes: Modes = CompendiumMan.computeModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
+    let modes: eModes = CompendiumMan.booleansToModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
 
-    CompendiumMan.addEntry($newEntry.dataset.categoryName, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
+    let categoryId = parseInt($newEntry.dataset.categoryId, 10);
+
+    CompendiumMan.addEntry(categoryId, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
     updateDisplay();
 
     $newEntryName.value = "";
@@ -187,7 +189,7 @@ function $newCategorySubmit_click(): void {
 
   if (!hasErrors) {
     try {
-      CompendiumMan.addCategory($newCategoryName.value.trim(), $newCategoryDescription.value.trim(), "en");
+      CompendiumMan.addCategory($newCategoryName.value.trim(), $newCategoryDescription.value.trim());
       updateDisplay();
 
       $newCategory.dataset.hidden = "";
@@ -222,7 +224,7 @@ function resetEditEntry(): void {
 }
 
 function $editEntrySubmit_click(): void {
-  let modes: Modes = CompendiumMan.computeModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
+  let modes: eModes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
 
   CompendiumMan.updateEntry($editEntry.dataset.categoryName, $editEntryCategory.value, $editEntry.dataset.entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
   updateDisplay();
@@ -287,15 +289,16 @@ function $display_click (event: Event): void {
 
     const $spanEdit: HTMLSpanElement = document.createElement("span");
     $spanEdit.classList.add("display-category-editname", "button");
-    if (l10n.getLocale() !== "en") {
-      $spanEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+    if (l10n.currentLocale !== "en") {
+      $spanEdit.textContent = `edit (in ${l10n.currentLocale.toUpperCase()})`;
     } else {
       $spanEdit.textContent = "edit";
     }
 
     $name.textContent = $input.value;
     if ($input.dataset.original !== $input.value.trim()) {
-      CompendiumMan.renameCategory($input.dataset.original, $input.value);
+      let categoryId = parseInt((<HTMLInputElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId, 10);
+      CompendiumMan.renameCategory(categoryId, $input.value, l10n.currentLocale);
       updateDisplay();
     }
 
@@ -339,26 +342,39 @@ function $display_click (event: Event): void {
     $name.replaceWith($input);
     target.replaceWith($divActions);
   } else if (target.classList.contains("display-category-descriptionaction-ok")) {
-    const $category: HTMLInputElement = <HTMLInputElement>target.parentElement.parentElement.parentElement.firstElementChild.firstElementChild;
     const $input: HTMLInputElement = <HTMLInputElement>target.parentElement.parentElement.firstElementChild;
     const $description: HTMLSpanElement = document.createElement("span");
     $description.classList.add("display-category-description");
 
     const $spanEdit: HTMLSpanElement = document.createElement("span");
     $spanEdit.classList.add("display-category-editdescription", "button");
-    if (l10n.getLocale() !== "en") {
-      $spanEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
+    if (l10n.currentLocale !== "en") {
+      $spanEdit.textContent = `edit (in ${l10n.currentLocale.toUpperCase()})`;
     } else {
       $spanEdit.textContent = "edit";
     }
 
     $description.textContent = $input.value;
     if ($input.dataset.original !== $input.value.trim()) {
-      CompendiumMan.updateDescription($category.textContent, $input.value, l10n.getLocale());
+      let categoryId = parseInt((<HTMLInputElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId, 10);
+      CompendiumMan.updateDescription(categoryId, $input.value, l10n.currentLocale);
       updateDisplay();
     }
 
     $input.replaceWith($description);
+    target.parentElement.replaceWith($spanEdit);
+  } else if (target.classList.contains("display-category-descriptionaction-cancel")) {
+    const $input: HTMLInputElement = <HTMLInputElement>target.parentElement.parentElement.firstElementChild;
+    const $name: HTMLSpanElement = document.createElement("span");
+    $name.classList.add("display-category-description");
+
+    const $spanEdit: HTMLSpanElement = document.createElement("span");
+    $spanEdit.classList.add("display-category-editdescription", "button");
+    $spanEdit.textContent = "edit";
+
+    $name.textContent = $input.dataset.original;
+
+    $input.replaceWith($name);
     target.parentElement.replaceWith($spanEdit);
   } else if (target.classList.contains("display-category-delete") && !target.hasAttribute("data-disabled")) {
     target.dataset.disabled = "";
@@ -376,13 +392,14 @@ function $display_click (event: Event): void {
     }
   } else if (target.classList.contains("display-category-add_entry")) {
     delete $newEntry.dataset.hidden;
-
+    $newEntry.dataset.categoryId = target.parentElement.dataset.categoryId;
+    
     $newEntryTo.textContent = `Adding to: ${target.dataset.categoryName}`;
-    $newEntry.dataset.categoryName = target.dataset.categoryName;
   
     $newEntryName.value = "";
     $newEntryAuthor.value = "";
     $newEntryNameLink.value = "";
+    $newEntryAuthorLink.value = "";
     $newEntryStandard.checked = false;
     $newEntryTaiko.checked = false;
     $newEntryCatch.checked = false;
@@ -394,23 +411,23 @@ function $display_click (event: Event): void {
 
     const categories = CompendiumMan.getCategories();
 
-    const entryData: EntryData = CompendiumMan.getEntryData($editEntry.dataset.categoryName, $editEntry.dataset.entryId);
+    const entryData: iEntryData = CompendiumMan.getEntryData($editEntry.dataset.categoryName, $editEntry.dataset.entryId);
     $editEntryName.value = entryData.name;
     $editEntryNameLink.value = entryData.nameLink;
     $editEntryAuthor.value = entryData.author;
     $editEntryAuthorLink.value = entryData.authorLink;
-    $editEntryStandard.checked = (Modes.Standard & entryData.modes) ? true : false;
-    $editEntryTaiko.checked = (Modes.Taiko & entryData.modes) ? true : false;
-    $editEntryCatch.checked = (Modes.Catch & entryData.modes) ? true : false;
-    $editEntryMania.checked = (Modes.Mania & entryData.modes) ? true : false;
+    $editEntryStandard.checked = (eModes.Standard & entryData.modes) ? true : false;
+    $editEntryTaiko.checked = (eModes.Taiko & entryData.modes) ? true : false;
+    $editEntryCatch.checked = (eModes.Catch & entryData.modes) ? true : false;
+    $editEntryMania.checked = (eModes.Mania & entryData.modes) ? true : false;
     $editEntryName.dataset.value = entryData.name;
     $editEntryNameLink.dataset.value = entryData.nameLink;
     $editEntryAuthor.dataset.value = entryData.author;
     $editEntryAuthorLink.dataset.value = entryData.authorLink;
-    $editEntryStandard.dataset.value = (Modes.Standard & entryData.modes) ? "true" : "false";
-    $editEntryTaiko.dataset.value = (Modes.Taiko & entryData.modes) ? "true" : "false";
-    $editEntryCatch.dataset.value = (Modes.Catch & entryData.modes) ? "true" : "false";
-    $editEntryMania.dataset.value = (Modes.Mania & entryData.modes) ? "true" : "false";
+    $editEntryStandard.dataset.value = (eModes.Standard & entryData.modes) ? "true" : "false";
+    $editEntryTaiko.dataset.value = (eModes.Taiko & entryData.modes) ? "true" : "false";
+    $editEntryCatch.dataset.value = (eModes.Catch & entryData.modes) ? "true" : "false";
+    $editEntryMania.dataset.value = (eModes.Mania & entryData.modes) ? "true" : "false";
 
     while ($editEntryCategory.firstChild) {
       $editEntryCategory.firstChild.remove();
@@ -489,7 +506,7 @@ function $controlExport_click(): void {
 $controlExport.addEventListener("click", $controlExport_click);
 
 function $exportSave_click(): void {
-  let blob = new Blob([JSON.stringify(CompendiumMan.getList())], {"type": "application/json"});
+  let blob = new Blob([JSON.stringify(CompendiumMan.List)], {"type": "application/json"});
   $exportSaveLink.href = URL.createObjectURL(blob);
 }
 $exportSaveLink.addEventListener("click", $exportSave_click);
@@ -497,6 +514,7 @@ $exportSaveLink.addEventListener("click", $exportSave_click);
 function $exportCopy_click(): void {
   if (!$exportCopy.hasAttribute("data-hidden")) {
     if ("clipboard" in navigator) {
+      // @ts-ignore feature detection in use
       navigator.clipboard.writeText($exportOutput.value)
       .then(() => {
         $exportCopy.dataset.disabled = "";
@@ -533,7 +551,7 @@ function sortList(): object {
   let sortedList: object = {};
 
   const categories: string[] = CompendiumMan.getCategories();
-  const list: CompendiumList = CompendiumMan.getList();
+  const list: CompendiumList = CompendiumMan.List;
 
   for (let category of categories) {
     sortedList[category] = {};
@@ -554,7 +572,7 @@ function sortList(): object {
       }
     }
     for (let letter in sortedList[category]) {
-      sortedList[category][letter].sort((a: EntryData, b: EntryData) => {
+      sortedList[category][letter].sort((a: iEntryData, b: iEntryData) => {
         // we don't care about letter case
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       });
@@ -572,7 +590,12 @@ interface ParseOutput {
   "category": string;
   "text": string
 }
-function $controlParseMd_click() {
+enum eOutputType {
+  Markdown,
+  BBCode
+}
+
+function parseList(kind: eOutputType) {
   delete $parse.dataset.hidden;
 
   let files: Array<ParseOutput> = [];
@@ -583,95 +606,52 @@ function $controlParseMd_click() {
   for (let category in sortedList) {
     if (sortedList.hasOwnProperty(category)) {
       listIndex++;
-      files.push({"category": category, "text": `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${category}\n\n${CompendiumMan.getDescription(category)}\n`});
+      if (kind === eOutputType.Markdown) {
+        files.push({"category": category, "text": `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${category}\n\n${CompendiumMan.getDescription(category)}\n`});
+      } else {
+        files.push({"category": category, "text": `${CompendiumMan.getDescription(category)}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`});
+      }
 
       for (let categoryKey of sortedList[category].sortedCategories) {
-        files[listIndex].text += `\n## ${categoryKey}\n\n| Modes |  |\n|---|---|\n`;
+        if (kind === eOutputType.Markdown) {
+          files[listIndex].text += `\n## ${categoryKey}\n\n| Modes |  |\n|---|---|\n`;
+        } else {
+          files[listIndex].text += "[notice]";
+        }
         for (let item in sortedList[category][categoryKey]) {
           if (sortedList[category][categoryKey].hasOwnProperty(item)) {
-            let entryData: EntryData = sortedList[category][categoryKey][item];
+            let entryData: iEntryData = sortedList[category][categoryKey][item];
             let modes: Array<string> = [];
 
-            if (entryData.modes & Modes.Standard) {
-              modes.push("![][o!s]");
+            if (kind === eOutputType.Markdown) {
+              if (entryData.modes & eModes.Standard) {
+                modes.push("![][o!s]");
+              }
+              if (entryData.modes & eModes.Taiko) {
+                modes.push("![][o!t]");
+              }
+              if (entryData.modes & eModes.Catch) {
+                modes.push("![][o!c]");
+              }
+              if (entryData.modes & eModes.Mania) {
+                modes.push("![][o!m]");
+              }
+              files[listIndex].text += `| ${modes.join(" ")} | [${entryData.name}](/community/forums/topics/${entryData.nameLink}) ${l10n.getString("by")} [${entryData.author}](/users/${entryData.authorLink}) |\n`;
+            } else {
+              if (entryData.modes & eModes.Standard) {
+                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img]");
+              }
+              if (entryData.modes & eModes.Taiko) {
+                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img]");
+              }
+              if (entryData.modes & eModes.Catch) {
+                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img]");
+              }
+              if (entryData.modes & eModes.Mania) {
+                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img]");
+              }
+              files[listIndex].text += `[url=https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/users/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;  
             }
-            if (entryData.modes & Modes.Taiko) {
-              modes.push("![][o!t]");
-            }
-            if (entryData.modes & Modes.Catch) {
-              modes.push("![][o!c]");
-            }
-            if (entryData.modes & Modes.Mania) {
-              modes.push("![][o!m]");
-            }
-
-            files[listIndex].text += `| ${modes.join(" ")} | [${entryData.name}](/community/forums/topics/${entryData.nameLink}) ${l10n.getString("by")} [${entryData.author}](/users/${entryData.authorLink}) |\n`;
-          }
-        }
-      }
-    }
-  }
-  if (files[0]) {
-    $parseOutput.textContent = files[0].text;
-  }
-}
-$controlParseMd.addEventListener("click", $controlParseMd_click);
-
-function $controlParseBb_click() {
-  delete $parse.dataset.hidden;
-
-  let files: Array<ParseOutput> = [];
-  const list: CompendiumList = CompendiumMan.getList();
-
-  let sortedList = sortList();
-
-  let listIndex: number = -1;
-  for (let category in sortedList) {
-    if (sortedList.hasOwnProperty(category)) {
-      listIndex++;
-      files.push({"category": category, "text": `${CompendiumMan.getDescription(category)}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`});
-      let items: object = list.categories[category];
-      let groupedItems: object = {};
-
-      // TODO sort when adding to CompendiumMan (and use an array)
-      // group and sort alphabetically
-      for (let item in items) {
-        if (items.hasOwnProperty(item)) {
-          let firstLetter = items[item].name.charAt(0).toUpperCase();
-
-          if (!(/[A-Z]/i).test(firstLetter)) {
-            firstLetter = "Others";
-          }
-          if (!groupedItems[firstLetter]) {
-            groupedItems[firstLetter] = [];
-          }
-          groupedItems[firstLetter].push(items[item]);
-        }
-      }
-
-      let keys: Array<string> = Object.keys(groupedItems);
-      keys = keys.sort();
-      for (let key of keys) {
-        files[listIndex].text += "[notice]";
-        for (let item in groupedItems[key]) {
-          if (groupedItems[key].hasOwnProperty(item)) {
-            let entryData: EntryData = groupedItems[key][item];
-            let modes: Array<string> = [];
-
-            if (entryData.modes & Modes.Standard) {
-              modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img]");
-            }
-            if (entryData.modes & Modes.Taiko) {
-              modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img]");
-            }
-            if (entryData.modes & Modes.Catch) {
-              modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img]");
-            }
-            if (entryData.modes & Modes.Mania) {
-              modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img]");
-            }
-
-            files[listIndex].text += `[url=https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/users/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;
           }
         }
         files[listIndex].text += "[/notice]";
@@ -681,10 +661,18 @@ function $controlParseBb_click() {
   if (files[0]) {
     $parseOutput.textContent = files[0].text;
   }
-
   if (files.length > 1) {
     delete $parseNav.dataset.hidden;
+    // TODO parseNav
   }
+}
+function $controlParseMd_click() {
+  parseList(eOutputType.Markdown);
+}
+$controlParseMd.addEventListener("click", $controlParseMd_click);
+
+function $controlParseBb_click() {
+  parseList(eOutputType.BBCode);
 }
 $controlParseBb.addEventListener("click", $controlParseBb_click);
 
@@ -692,6 +680,7 @@ $controlParseBb.addEventListener("click", $controlParseBb_click);
 function $parseCopy_click() {
   if (!$parseCopy.hasAttribute("data-disabled")) {
     if ("clipboard" in navigator) {
+      // @ts-ignore feature detection in use
       navigator.clipboard.writeText($parseOutput.value)
       .then(() => {
         $parseCopy.dataset.disabled = "";
@@ -748,6 +737,7 @@ $controlLocale.addEventListener("change", $controlLocale_change);
 
 function window_beforeunload(event: Event) {
   event.preventDefault();
+  // @ts-ignore required by chrome
   event.returnValue = '';
 }
 window.addEventListener("beforeunload", window_beforeunload);

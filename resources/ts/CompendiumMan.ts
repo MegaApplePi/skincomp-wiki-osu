@@ -4,22 +4,46 @@ import EntryNonexistsError from "./Error/EntryNonexistsError.js";
 import ImportError from "./Error/ImportError.js";
 import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
-import Modes from "./eModes.js";
-import EntryData from "./iEntryData.js";
+import eModes from "./eModes.js";
+import iEntryData from "./iEntryData.js";
 import CompendiumList from "./iCompendiumList.js";
+import iCategory from "./iCategory.js";
 
 abstract class CompendiumMan {
   private static list: CompendiumList = {
-    "nextId": 0,
-    "categories": {},
-    "descriptions": {}
+    "nextEntryId": 0,
+    "nextCategoryId": 0,
+    "categories": []
   };
 
-  public static getList(): CompendiumList {
-    return this.list;
+  public static get List(): CompendiumList {
+    return Object.assign({}, this.list);
   }
 
-  public static getEntryData(categoryName: string, key: string|number): EntryData {
+  private static hasCategoryById(categoryId: number): boolean {
+    if (this.CategoryIds.includes(categoryId)) {
+      return true;
+    }
+    return false;
+  }
+
+  private static get CategoryNames() {
+    let categories = [];
+    for (let item of this.list.categories) {
+      categories.push(item.name);
+    }
+    return categories;
+  }
+
+  private static get CategoryIds() {
+    let categories = [];
+    for (let item of this.list.categories) {
+      categories.push(item.id);
+    }
+    return categories;
+  }
+
+  public static getEntryData(categoryName: string, key: string|number): iEntryData {
     if (this.list.categories[categoryName]) {
       if (this.list.categories[categoryName][key]) {
         return this.list.categories[categoryName][key];
@@ -35,10 +59,15 @@ abstract class CompendiumMan {
     return Object.keys(this.list.categories).sort();
   }
 
-  private static getNextId(): number {
-    return this.list.nextId++;
+  private static get NextCategoryId(): number {
+    return this.list.nextCategoryId++;
   }
 
+  private static get NextEntryId(): number {
+    return this.list.nextEntryId++;
+  }
+
+  // import and export
   public static import(input: CompendiumList): void {
     try {
       this.list = input;
@@ -55,54 +84,60 @@ abstract class CompendiumMan {
   public static deleteCategory(name: string): void {
     if (this.list.categories[name]) {
       delete this.list.categories[name];
-      delete this.list.descriptions[name];
     } else {
       throw new CategoryNonexistsError();
     }
   }
 
-  public static addCategory(name: string, description: string, locale: string): void {
-    if (this.list.categories[name]) {
+  public static addCategory(name: string, description: string): void {
+    if (this.CategoryNames.includes(name)) {
       throw new CategoryExistsError();
     } else {
-      if (l10n.localeExists(locale)) {
-        this.list.descriptions[name] = {};
-        this.list.descriptions[name][locale] = description;
-        this.list.categories[name] = {};
-      } else {
-        throw new LocaleNonexistsError();
-      }
+      this.list.categories.push({
+        "id": this.NextCategoryId,
+        "name": {
+          "en": name
+        },
+        "description": {
+          "en": description
+        },
+        "entries": []
+      });
     }
   }
 
-  public static renameCategory(oldName: string, newName: string): void {
-    if (this.list.categories[oldName]) {
+  public static renameCategory(categoryId: number, newName: string, locale: string): void {
+    if (this.hasCategoryById(categoryId)) {
       if (this.list.categories[newName]) {
         throw new CategoryExistsError();
       } else {
-        this.list.categories[newName] = Object.assign({}, this.list.categories[oldName]);
-        this.list.descriptions[newName] = this.list.descriptions[oldName];
-        delete this.list.categories[oldName];
-        delete this.list.descriptions[oldName];
+        if (l10n.hasLocale(locale)) {
+          this.getCategoryById(categoryId).name[locale] = newName;
+        } else {
+          throw new LocaleNonexistsError();
+        }
       }
     } else {
       throw new CategoryNonexistsError();
     }
   }
 
-  public static getDescription(category: string): string {
-    if (this.list.descriptions[category]) {
-      return this.list.descriptions[category];
+  public static getCategoryById(categoryId: number): iCategory {
+    let result = this.list.categories.find((item) => {
+      return item.id === categoryId;
+    });
+
+    if (result) {
+      return result;
     } else {
       throw new CategoryNonexistsError();
-      
     }
   }
 
-  public static updateDescription(category: string, description: string, locale: string): void {
-    if (this.list.descriptions[category]) {
-      if (l10n.localeExists(locale)) {
-        this.list.descriptions[category][locale] = description;
+  public static updateDescription(categoryId: number, description: string, locale: string): void {
+    if (this.hasCategoryById(categoryId)) {
+      if (l10n.hasLocale(locale)) {
+        this.getCategoryById(categoryId).description[locale] = description;
       } else {
         throw new LocaleNonexistsError();
       }
@@ -112,43 +147,45 @@ abstract class CompendiumMan {
   }
 
   // entry methods
-  public static addEntry(category: string, name: string, nameLink: string, author: string, authorLink: string, modes: Modes): void {
-    if (this.list.categories[category]) {
-      this.list.categories[category][this.getNextId()] = {
+  public static addEntry(categoryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
+    if (this.hasCategoryById(categoryId)) {
+      this.getCategoryById(categoryId).entries.push({
+        "id": this.NextEntryId,
         name,
         nameLink,
         author,
         authorLink,
         modes
-      };
+      });
     } else {
       throw new CategoryNonexistsError();
     }
   }
 
-  public static computeModes(s: boolean, t: boolean, c: boolean, m: boolean): Modes {
-    let modes: Modes = Modes.None;
+  public static booleansToModes(s: boolean, t: boolean, c: boolean, m: boolean): eModes {
+    let modes: eModes = eModes.None;
 
     if (s) {
-      modes |= Modes.Standard;
+      modes |= eModes.Standard;
     }
 
     if (t) {
-      modes |= Modes.Taiko;
+      modes |= eModes.Taiko;
     }
 
     if (c) {
-      modes |= Modes.Catch;
+      modes |= eModes.Catch;
     }
 
     if (m) {
-      modes |= Modes.Mania;
+      modes |= eModes.Mania;
     }
 
     return modes;
   }
+  // TODO modesToString
 
-  public static updateEntry(oldCategory: string, newCategory: string, id: string|number, name: string, nameLink: string, author: string, authorLink: string, modes: Modes): void {
+  public static updateEntry(oldCategory: string, newCategory: string, id: string|number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
     if (this.list.categories[oldCategory]) {
       if (this.list.categories[oldCategory][id]) {
         this.list.categories[oldCategory][id] = {
@@ -176,153 +213,157 @@ abstract class CompendiumMan {
     const $container: HTMLDivElement = document.createElement("div");
     $container.classList.add("display-category");
 
-    for (let category in this.list.categories) {
-      if (this.list.categories.hasOwnProperty(category)) {
-        // name
-        const $category: HTMLDivElement = document.createElement("div");
-        $category.classList.add("display-category-head");
+    for (let category of this.list.categories) {
+      // group
+      const $group: HTMLDivElement = document.createElement("div");
+      $group.dataset.categoryId = category.id.toString();
+      $group.classList.add("display-category-group");
+      $container.insertAdjacentElement("beforeend", $group);
 
-        const $nameGroup: HTMLDivElement = document.createElement("div");
-        $nameGroup.classList.add("display-category-group");
-        $category.insertAdjacentElement("beforeend", $nameGroup);
+      // name
+      const $category: HTMLDivElement = document.createElement("div");
+      $category.classList.add("display-category-head");
+      $group.insertAdjacentElement("beforeend", $category);
 
-        const $name: HTMLSpanElement = document.createElement("span");
-        $name.classList.add("display-category-name");
-        $name.textContent = category;
-        $nameGroup.insertAdjacentElement("beforeend", $name);
+      const $nameGroup: HTMLDivElement = document.createElement("div");
+      $nameGroup.classList.add("display-category-namegroup");
+      $category.insertAdjacentElement("beforeend", $nameGroup);
 
-        // name -> edit
-        const $nameEdit: HTMLSpanElement = document.createElement("span");
-        $nameEdit.classList.add("display-category-editname", "button");
-        if (l10n.getLocale() !== "en") {
-          $nameEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
-        } else {
-          $nameEdit.textContent = "edit";
+      const $name: HTMLSpanElement = document.createElement("span");
+      $name.classList.add("display-category-name");
+
+      let name = category.name[l10n.currentLocale];
+      if (!name) {
+        // use English if selected locale doesn't have one
+        name = category.name["en"];
+      }
+      $name.textContent = name;
+      $nameGroup.insertAdjacentElement("beforeend", $name);
+
+      // name -> edit
+      const $nameEdit: HTMLSpanElement = document.createElement("span");
+      $nameEdit.classList.add("display-category-editname", "button");
+      if (l10n.currentLocale !== "en") {
+        $nameEdit.textContent = `edit (in ${l10n.currentLocale.toUpperCase()})`;
+      } else {
+        $nameEdit.textContent = "edit";
+      }
+      $nameGroup.insertAdjacentElement("beforeend", $nameEdit);
+
+      // name -> delete
+      const $delete: HTMLSpanElement = document.createElement("span");
+      $delete.classList.add("display-category-delete", "button-alt");
+      $delete.textContent = "delete";
+      $nameGroup.insertAdjacentElement("beforeend", $delete);
+
+      // name -> delete -> confirm
+      const $deleteConfirm: HTMLSpanElement = document.createElement("span");
+      $deleteConfirm.classList.add("display-category-delete-confirm");
+      $deleteConfirm.dataset.hidden = "";
+      $deleteConfirm.textContent = "Really (irreversible)?";
+      $nameGroup.insertAdjacentElement("beforeend", $deleteConfirm);
+
+      const $deleteNo: HTMLSpanElement = document.createElement("span");
+      $deleteNo.classList.add("display-category-delete-no", "button");
+      $deleteNo.textContent = "No, whoops";
+      $deleteConfirm.insertAdjacentElement("beforeend", $deleteNo);
+
+      const $deleteYes: HTMLSpanElement = document.createElement("span");
+      $deleteYes.classList.add("display-category-delete-yes", "button-alt");
+      $deleteYes.textContent = "Yes, delete";
+      $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
+
+      // description
+      const $descriptionGroup: HTMLDivElement = document.createElement("div");
+      $descriptionGroup.classList.add("display-category-descriptiongroup");
+      $category.insertAdjacentElement("beforeend", $descriptionGroup);
+
+      const $description: HTMLSpanElement = document.createElement("span");
+      $description.classList.add("display-category-description");
+
+      let description = category.description[l10n.currentLocale];
+      if (!description) {
+        // use English if selected locale doesn't have one
+        description = category.description["en"];
+      }
+      $description.textContent = description;
+      $descriptionGroup.insertAdjacentElement("beforeend", $description);
+
+      // description -> edit
+      const $descriptionEdit: HTMLSpanElement = document.createElement("span");
+      $descriptionEdit.classList.add("display-category-editdescription", "button");
+      if (l10n.currentLocale !== "en") {
+        $descriptionEdit.textContent = `edit (in ${l10n.currentLocale.toUpperCase()})`;
+      } else {
+        $descriptionEdit.textContent = "edit";
+      }
+      $descriptionGroup.insertAdjacentElement("beforeend", $descriptionEdit);
+
+      // entries
+      const $entries: HTMLUListElement = document.createElement("ul");
+      $entries.classList.add("category-entry");
+      $group.insertAdjacentElement("beforeend", $entries);
+
+      const $addEntry: HTMLDivElement = document.createElement("div");
+      $addEntry.classList.add("display-category-add_entry", "button");
+      $addEntry.textContent = "Add Entry";
+      $addEntry.dataset.categoryName = category.name[l10n.currentLocale];
+      $group.insertAdjacentElement("beforeend", $addEntry);
+
+      for (let entry of category.entries) {
+        // display the entry
+        const $entry: HTMLLIElement = document.createElement("li");
+        $entry.dataset.id = entry.id.toString();
+
+        const $name: HTMLAnchorElement = document.createElement("a");
+        $name.href = `https://osu.ppy.sh/community/forums/topics/${entry.nameLink}`;
+        $name.textContent = entry.name;
+        $name.target = "_blank";
+
+        const $author: HTMLAnchorElement = document.createElement("a");
+        $author.href = `https://osu.ppy.sh/users/${entry.authorLink}`;
+        $author.textContent = entry.author;
+        $author.target = "_blank";
+
+        let modes: string[] = [];
+
+        if (entry.modes & eModes.Standard) {
+          modes.push("S");
         }
-        $nameGroup.insertAdjacentElement("beforeend", $nameEdit);
+        if (entry.modes & eModes.Taiko) {
+          modes.push("T");
+        }
+        if (entry.modes & eModes.Catch) {
+          modes.push("C");
+        }
+        if (entry.modes & eModes.Mania) {
+          modes.push("M");
+        }
 
-        // name -> delete
+        const $modes: HTMLSpanElement = document.createElement("span");
+        $modes.textContent = modes.join(" ");
+
+        $entry.insertAdjacentElement("beforeend", $name);
+        $entry.insertAdjacentText("beforeend", ` ${l10n.getString("by")} `);
+        $entry.insertAdjacentElement("beforeend", $author);
+        if (modes.length > 0) {
+          $entry.insertAdjacentText("beforeend", " - ");
+          $entry.insertAdjacentElement("beforeend", $modes);
+        }
+
+        // edit button
+        const $edit: HTMLSpanElement = document.createElement("span");
+        $edit.classList.add("entry-edit", "button");
+        $edit.textContent = "edit";
+        $entry.insertAdjacentElement("beforeend", $edit);
+
+        // delete button
         const $delete: HTMLSpanElement = document.createElement("span");
-        $delete.classList.add("display-category-delete", "button-alt");
+        $delete.classList.add("entry-delete", "button-alt");
         $delete.textContent = "delete";
-        $nameGroup.insertAdjacentElement("beforeend", $delete);
+        $entry.insertAdjacentElement("beforeend", $delete);
 
-        // name -> delete -> confirm
-        const $deleteConfirm: HTMLSpanElement = document.createElement("span");
-        $deleteConfirm.classList.add("display-category-delete-confirm");
-        $deleteConfirm.dataset.hidden = "";
-        $deleteConfirm.textContent = "Really (irreversible)?";
-        $nameGroup.insertAdjacentElement("beforeend", $deleteConfirm);
-
-        const $deleteNo: HTMLSpanElement = document.createElement("span");
-        $deleteNo.classList.add("display-category-delete-no", "button");
-        $deleteNo.textContent = "No, whoops";
-        $deleteConfirm.insertAdjacentElement("beforeend", $deleteNo);
-
-        const $deleteYes: HTMLSpanElement = document.createElement("span");
-        $deleteYes.classList.add("display-category-delete-yes", "button-alt");
-        $deleteYes.textContent = "Yes, delete";
-        $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
-
-        // description
-        const $descriptionGroup: HTMLDivElement = document.createElement("div");
-        $descriptionGroup.classList.add("display-category-group");
-        $category.insertAdjacentElement("beforeend", $descriptionGroup);
-
-        const $description: HTMLSpanElement = document.createElement("span");
-        $description.classList.add("display-category-description");
-
-        let description = this.list.descriptions[category][l10n.getLocale()];
-        if (!description) {
-          // use English if selected locale doesn't have one
-          description = this.list.descriptions[category]["en"];
-        }
-        $description.textContent = description;
-        $descriptionGroup.insertAdjacentElement("beforeend", $description);
-
-        // description -> edit
-        const $descriptionEdit: HTMLSpanElement = document.createElement("span");
-        $descriptionEdit.classList.add("display-category-editdescription", "button");
-        if (l10n.getLocale() !== "en") {
-          $descriptionEdit.textContent = `edit (in ${l10n.getLocale().toUpperCase()})`;
-        } else {
-          $descriptionEdit.textContent = "edit";
-        }
-        $descriptionGroup.insertAdjacentElement("beforeend", $descriptionEdit);
-
-        // entries
-        const $entries: HTMLUListElement = document.createElement("ul");
-        $entries.classList.add("category-entry");
-
-        const $addEntry: HTMLDivElement = document.createElement("div");
-        $addEntry.classList.add("display-category-add_entry", "button");
-        $addEntry.textContent = "Add Entry";
-        $addEntry.dataset.categoryName = category;
-
-        $container.insertAdjacentElement("beforeend", $category);
-        $container.insertAdjacentElement("beforeend", $entries);
-        $container.insertAdjacentElement("beforeend", $addEntry);
-
-        for (let entry in this.list.categories[category]) {
-          if (this.list.categories[category].hasOwnProperty(entry)) {
-            const entryData: EntryData = this.list.categories[category][entry];
-
-            // display the entry
-            const $entry: HTMLLIElement = document.createElement("li");
-            $entry.dataset.id = entry;
-
-            const $name: HTMLAnchorElement = document.createElement("a");
-            $name.href = `https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}`;
-            $name.textContent = entryData.name;
-            $name.target = "_blank";
-
-            const $author: HTMLAnchorElement = document.createElement("a");
-            $author.href = `https://osu.ppy.sh/users/${entryData.authorLink}`;
-            $author.textContent = entryData.author;
-            $author.target = "_blank";
-
-            let modes: Array<string> = [];
-
-            if (entryData.modes & Modes.Standard) {
-              modes.push("S");
-            }
-            if (entryData.modes & Modes.Taiko) {
-              modes.push("T");
-            }
-            if (entryData.modes & Modes.Catch) {
-              modes.push("C");
-            }
-            if (entryData.modes & Modes.Mania) {
-              modes.push("M");
-            }
-
-            const $modes: HTMLSpanElement = document.createElement("span");
-            $modes.textContent = modes.join(" ");
-
-            $entry.insertAdjacentElement("beforeend", $name);
-            $entry.insertAdjacentText("beforeend", ` ${l10n.getString("by")} `);
-            $entry.insertAdjacentElement("beforeend", $author);
-            if (modes.length > 0) {
-              $entry.insertAdjacentText("beforeend", " - ");
-              $entry.insertAdjacentElement("beforeend", $modes);
-            }
-
-            // edit button
-            const $edit: HTMLSpanElement = document.createElement("span");
-            $edit.classList.add("entry-edit", "button");
-            $edit.textContent = "edit";
-            $entry.insertAdjacentElement("beforeend", $edit);
-
-            // delete button
-            const $delete: HTMLSpanElement = document.createElement("span");
-            $delete.classList.add("entry-delete", "button-alt");
-            $delete.textContent = "delete";
-            $entry.insertAdjacentElement("beforeend", $delete);
-
-            $entries.insertAdjacentElement("beforeend", $entry);
-          }
-        }
-
+        $entries.insertAdjacentElement("beforeend", $entry);
       }
     }
     return $container;

@@ -1,7 +1,9 @@
+import iCategory from "./iCategory.js";
+
 interface CompendiumList {
-  "nextId": number;
-  "categories": object;
-  "descriptions": object;
+  "categories": iCategory[];
+  "nextCategoryId": number;
+  "nextEntryId": number;
 }
 
 export default CompendiumList;

@@ -1,4 +1,4 @@
-enum Modes {
+enum eModes {
   None = 0,
   Standard = 1 << 0,
   Taiko = 1 << 1,
@@ -6,4 +6,4 @@ enum Modes {
   Mania = 1 << 3
 }
 
-export default Modes;
+export default eModes;

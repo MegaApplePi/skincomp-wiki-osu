@@ -1,12 +1,13 @@
-import Modes from "./eModes";
+import eModes from "./eModes";
 
-interface EntryData {
+interface iEntryData {
   "id": number;
+  // l10n not needed
   "name": string;
   "nameLink": string;
   "author": string;
   "authorLink": string;
-  "modes": Modes;
+  "modes": eModes;
 }
 
-export default EntryData;
+export default iEntryData;
