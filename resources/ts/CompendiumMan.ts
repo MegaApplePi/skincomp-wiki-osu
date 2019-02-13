@@ -1,3 +1,4 @@
+// TODO organize the methods better
 import CategoryExistsError from "./Error/CategoryExistsError.js";
 import CategoryNonexistsError from "./Error/CategoryNonexistsError.js";
 import EntryNonexistsError from "./Error/EntryNonexistsError.js";
@@ -273,14 +274,17 @@ abstract class CompendiumMan {
   public static updateEntry(oldCategoryId: number, newCategoryId: number, entryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
     if (this.hasCategoryById(oldCategoryId)) {
       if (this.hasEntityById(entryId)) {
-        this.getCategoryById(oldCategoryId).entries[entryId] = {
+        let index = this.getCategoryById(oldCategoryId).entries.findIndex((item) => {
+          return item.id === entryId;
+        });
+        this.getCategoryById(oldCategoryId).entries[index] = {
           "id": entryId,
           name,
           nameLink,
           author,
           authorLink,
           modes
-        }
+        };
 
         if (newCategoryId !== oldCategoryId) {
           this.getCategoryById(newCategoryId).entries.push(Object.assign({}, this.getCategoryById(oldCategoryId).entries[entryId]));

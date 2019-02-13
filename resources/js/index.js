@@ -1,3 +1,4 @@
+// TODO clean this up
 import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
@@ -103,7 +104,7 @@ function $newEntrySubmit_click() {
         delete $newEntryAuthor.dataset.invalid;
     }
     // ACCEPT https://osu.ppy.sh/users/#, /users/#, /u/#, or #
-    let authorLink = $newEntryNameLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/u(?:sers)?\/)?(\d+)$/);
+    let authorLink = $newEntryAuthorLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/u(?:sers)?\/)?(\d+)$/);
     if (authorLink) {
         delete $newEntryAuthorLink.dataset.invalid;
         // the second item is the thing we want
@@ -180,6 +181,7 @@ $newCategorySubmit.addEventListener("click", $newCategorySubmit_click);
 function $newCategoryCancel_click() {
     $newCategory.dataset.hidden = "";
     $newCategoryName.value = "";
+    $newCategoryDescription.value = "";
     delete $newCategoryName.dataset.invalid;
 }
 $newCategoryCancel.addEventListener("click", $newCategoryCancel_click);
@@ -198,7 +200,7 @@ function $editEntrySubmit_click() {
     let oldCategoryId = parseInt($editEntry.dataset.categoryId, 10);
     let newCategoryId = parseInt($editEntryCategory.value, 10);
     let entryId = parseInt($editEntry.dataset.entryId, 10);
-    console.log(oldCategoryId, newCategoryId, entryId);
+    // TODO missing validation
     CompendiumMan.updateEntry(oldCategoryId, newCategoryId, entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
     updateDisplay();
     resetEditEntry();
