@@ -226,7 +226,13 @@ function resetEditEntry(): void {
 function $editEntrySubmit_click(): void {
   let modes: eModes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
 
-  CompendiumMan.updateEntry($editEntry.dataset.categoryName, $editEntryCategory.value, $editEntry.dataset.entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
+  let oldCategoryId = parseInt($editEntry.dataset.categoryId, 10);
+  let newCategoryId = parseInt($editEntryCategory.value, 10);
+  let entryId = parseInt($editEntry.dataset.entryId, 10);
+
+  console.log(oldCategoryId, newCategoryId, entryId);
+
+  CompendiumMan.updateEntry(oldCategoryId, newCategoryId, entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
   updateDisplay();
 
   resetEditEntry();
@@ -405,13 +411,13 @@ function $display_click (event: Event): void {
     $newEntryCatch.checked = false;
     $newEntryMania.checked = false;
   } else if (target.classList.contains("entry-edit")) {
-    $editEntry.dataset.categoryName = (<HTMLElement>target.parentElement.parentElement.previousElementSibling.firstElementChild).textContent;
+    $editEntry.dataset.categoryId = (<HTMLElement>target.parentElement.parentElement.parentElement).dataset.categoryId;
 
     $editEntry.dataset.entryId = target.parentElement.dataset.id;
 
-    const categories = CompendiumMan.getCategories();
+    const categories = CompendiumMan.CategoryIdNameList;
 
-    const entryData: iEntryData = CompendiumMan.getEntryData($editEntry.dataset.categoryName, $editEntry.dataset.entryId);
+    const entryData: iEntryData = CompendiumMan.getEntryDataById(parseInt($editEntry.dataset.categoryId, 10), parseInt($editEntry.dataset.entryId, 10));
     $editEntryName.value = entryData.name;
     $editEntryNameLink.value = entryData.nameLink;
     $editEntryAuthor.value = entryData.author;
@@ -420,6 +426,8 @@ function $display_click (event: Event): void {
     $editEntryTaiko.checked = (eModes.Taiko & entryData.modes) ? true : false;
     $editEntryCatch.checked = (eModes.Catch & entryData.modes) ? true : false;
     $editEntryMania.checked = (eModes.Mania & entryData.modes) ? true : false;
+
+    // original values for reset button
     $editEntryName.dataset.value = entryData.name;
     $editEntryNameLink.dataset.value = entryData.nameLink;
     $editEntryAuthor.dataset.value = entryData.author;
@@ -435,10 +443,10 @@ function $display_click (event: Event): void {
 
     for (let category of categories) {
       const $option: HTMLOptionElement = document.createElement("option");
-      $option.value = category;
-      $option.textContent = category;
+      $option.value = category.id.toString();
+      $option.textContent = category.name[l10n.currentLocale];
 
-      if ($editEntry.dataset.categoryName === category) {
+      if ($editEntry.dataset.categoryId === category.id.toString()) {
         $option.selected = true;
       }
 
@@ -547,45 +555,6 @@ function $exportClose_click(): void {
 $exportClose.addEventListener("click", $exportClose_click);
 
 // parse to events
-function sortList(): object {
-  let sortedList: object = {};
-
-  const categories: string[] = CompendiumMan.getCategories();
-  const list: CompendiumList = CompendiumMan.List;
-
-  for (let category of categories) {
-    sortedList[category] = {};
-    let items: object = list.categories[category];
-
-    // group and sort alphabetically
-    for (let item in items) {
-      if (items.hasOwnProperty(item)) {
-        let firstLetter = items[item].name.charAt(0).toUpperCase();
-
-        if (!(/[A-Z]/i).test(firstLetter)) {
-          firstLetter = l10n.getString("Others");
-        }
-        if (!sortedList[category][firstLetter]) {
-          sortedList[category][firstLetter] = [];
-        }
-        sortedList[category][firstLetter].push(items[item]);
-      }
-    }
-    for (let letter in sortedList[category]) {
-      sortedList[category][letter].sort((a: iEntryData, b: iEntryData) => {
-        // we don't care about letter case
-        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-      });
-    }
-    sortedList[category].sortedCategories = Object.keys(sortedList[category]);
-    sortedList[category].sortedCategories.sort((a: string, b: string) => {
-        // we don't care about letter case
-        return a.toLowerCase().localeCompare(b.toLowerCase());
-    });
-  }
-  return sortedList;
-}
-
 interface ParseOutput {
   "category": string;
   "text": string
@@ -595,68 +564,75 @@ enum eOutputType {
   BBCode
 }
 
+interface parsedFiles {
+  "category": string;
+  "text": string;
+}
 function parseList(kind: eOutputType) {
   delete $parse.dataset.hidden;
 
-  let files: Array<ParseOutput> = [];
+  let files: parsedFiles[] = [];
 
-  let sortedList = sortList();
+  const sortedList = CompendiumMan.organizeList();
 
-  let listIndex: number = -1;
-  for (let category in sortedList) {
-    if (sortedList.hasOwnProperty(category)) {
-      listIndex++;
+  for (let item of sortedList) {
+    let parsedFile: parsedFiles = {
+      "category": item.category.name[l10n.currentLocale],
+      "text": ""
+    };
+
+    if (kind === eOutputType.Markdown) {
+      parsedFile.text += `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${item.category.name[l10n.currentLocale]}\n\n${item.category.description[l10n.currentLocale]}\n`;
+    } else {
+      parsedFile.text += `${item.category.description[l10n.currentLocale]}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`;
+    }
+
+    for (let section of Object.keys(item.entries)) {
       if (kind === eOutputType.Markdown) {
-        files.push({"category": category, "text": `[o!s]: /wiki/shared/mode/osu.png "osu!standard"\n[o!t]: /wiki/shared/mode/taiko.png "osu!taiko"\n[o!c]: /wiki/shared/mode/catch.png "osu!catch"\n[o!m]: /wiki/shared/mode/mania.png "osu!mania"\n\n# ${category}\n\n${CompendiumMan.getDescription(category)}\n`});
+        parsedFile.text += `\n## ${section}\n\n| Modes |  |\n|---|---|\n`;
       } else {
-        files.push({"category": category, "text": `${CompendiumMan.getDescription(category)}\n\n[list][*][img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img] ${l10n.getString("means the skin contains osu!standard elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img] ${l10n.getString("means the skin contains osu!taiko elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img] ${l10n.getString("means the skin contains osu!catch elements")}\n[*][img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img] ${l10n.getString("means the skin contains osu!mania elements")}[/list]`});
+        parsedFile.text += "[notice]";
       }
 
-      for (let categoryKey of sortedList[category].sortedCategories) {
-        if (kind === eOutputType.Markdown) {
-          files[listIndex].text += `\n## ${categoryKey}\n\n| Modes |  |\n|---|---|\n`;
-        } else {
-          files[listIndex].text += "[notice]";
-        }
-        for (let item in sortedList[category][categoryKey]) {
-          if (sortedList[category][categoryKey].hasOwnProperty(item)) {
-            let entryData: iEntryData = sortedList[category][categoryKey][item];
-            let modes: Array<string> = [];
+      for (let entry of item.entries[section]) {
+        let entryData: iEntryData = entry;
+        let modes: Array<string> = [];
 
-            if (kind === eOutputType.Markdown) {
-              if (entryData.modes & eModes.Standard) {
-                modes.push("![][o!s]");
-              }
-              if (entryData.modes & eModes.Taiko) {
-                modes.push("![][o!t]");
-              }
-              if (entryData.modes & eModes.Catch) {
-                modes.push("![][o!c]");
-              }
-              if (entryData.modes & eModes.Mania) {
-                modes.push("![][o!m]");
-              }
-              files[listIndex].text += `| ${modes.join(" ")} | [${entryData.name}](/community/forums/topics/${entryData.nameLink}) ${l10n.getString("by")} [${entryData.author}](/users/${entryData.authorLink}) |\n`;
-            } else {
-              if (entryData.modes & eModes.Standard) {
-                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img]");
-              }
-              if (entryData.modes & eModes.Taiko) {
-                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img]");
-              }
-              if (entryData.modes & eModes.Catch) {
-                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img]");
-              }
-              if (entryData.modes & eModes.Mania) {
-                modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img]");
-              }
-              files[listIndex].text += `[url=https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/users/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;  
-            }
+        if (kind === eOutputType.Markdown) {
+          if (entryData.modes & eModes.Standard) {
+            modes.push("![][o!s]");
           }
+          if (entryData.modes & eModes.Taiko) {
+            modes.push("![][o!t]");
+          }
+          if (entryData.modes & eModes.Catch) {
+            modes.push("![][o!c]");
+          }
+          if (entryData.modes & eModes.Mania) {
+            modes.push("![][o!m]");
+          }
+          parsedFile.text += `| ${modes.join(" ")} | [${entryData.name}](/community/forums/topics/${entryData.nameLink}) ${l10n.getString("by")} [${entryData.author}](/users/${entryData.authorLink}) |\n`;
+        } else {
+          if (entryData.modes & eModes.Standard) {
+            modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/osu.gif[/img]");
+          }
+          if (entryData.modes & eModes.Taiko) {
+            modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/taiko.gif[/img]");
+          }
+          if (entryData.modes & eModes.Catch) {
+            modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/ctb.gif[/img]");
+          }
+          if (entryData.modes & eModes.Mania) {
+            modes.push("[img]https://osu.ppy.sh/forum/images/icons/misc/mania.gif[/img]");
+          }
+          parsedFile.text += `[url=https://osu.ppy.sh/community/forums/topics/${entryData.nameLink}]${entryData.name}[/url] ${l10n.getString("by")} [url=https://osu.ppy.sh/users/${entryData.authorLink}]${entryData.author}[/url] ${modes.join(" ")}\n`;  
         }
-        files[listIndex].text += "[/notice]";
+      }
+      if (kind === eOutputType.BBCode) {
+        parsedFile.text += "[/notice]";
       }
     }
+    files.push(parsedFile);
   }
   if (files[0]) {
     $parseOutput.textContent = files[0].text;

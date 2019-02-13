@@ -17,22 +17,50 @@ class CompendiumMan {
     }
     static get CategoryNames() {
         let categories = [];
-        for (let item of this.list.categories) {
-            categories.push(item.name);
+        for (let category of this.list.categories) {
+            categories.push(category.name);
+        }
+        return categories;
+    }
+    static get CategoryIdNameList() {
+        let categories = [];
+        for (let category of this.list.categories) {
+            categories.push({
+                "name": category.name,
+                "id": category.id
+            });
         }
         return categories;
     }
     static get CategoryIds() {
         let categories = [];
-        for (let item of this.list.categories) {
-            categories.push(item.id);
+        for (let category of this.list.categories) {
+            categories.push(category.id);
         }
         return categories;
     }
-    static getEntryData(categoryName, key) {
-        if (this.list.categories[categoryName]) {
-            if (this.list.categories[categoryName][key]) {
-                return this.list.categories[categoryName][key];
+    static hasEntityById(entityId) {
+        if (this.EntityIds.includes(entityId)) {
+            return true;
+        }
+        return false;
+    }
+    static get EntityIds() {
+        let entities = [];
+        for (let category of this.list.categories) {
+            for (let entry of category.entries) {
+                entities.push(entry.id);
+            }
+        }
+        return entities;
+    }
+    static getEntryDataById(categoryId, entityId) {
+        if (this.hasCategoryById(categoryId)) {
+            if (this.hasEntityById(entityId)) {
+                let result = this.getCategoryById(categoryId).entries.find((item) => {
+                    return item.id === entityId;
+                });
+                return result;
             }
             else {
                 throw new EntryNonexistsError();
@@ -41,9 +69,6 @@ class CompendiumMan {
         else {
             throw new CategoryNonexistsError();
         }
-    }
-    static getCategories() {
-        return Object.keys(this.list.categories).sort();
     }
     static get NextCategoryId() {
         return this.list.nextCategoryId++;
@@ -64,6 +89,12 @@ class CompendiumMan {
         return JSON.stringify(this.list);
     }
     // category methods
+    static sortCategories() {
+        this.list.categories.sort((a, b) => {
+            // we don't care about letter case
+            return a.name[l10n.currentLocale].toLowerCase().localeCompare(b.name[l10n.currentLocale].toLowerCase());
+        });
+    }
     static deleteCategory(name) {
         if (this.list.categories[name]) {
             delete this.list.categories[name];
@@ -73,6 +104,7 @@ class CompendiumMan {
         }
     }
     static addCategory(name, description) {
+        // TODO sort the categories
         if (this.CategoryNames.includes(name)) {
             throw new CategoryExistsError();
         }
@@ -87,6 +119,7 @@ class CompendiumMan {
                 },
                 "entries": []
             });
+            this.sortCategories();
         }
     }
     static renameCategory(categoryId, newName, locale) {
@@ -97,6 +130,7 @@ class CompendiumMan {
             else {
                 if (l10n.hasLocale(locale)) {
                     this.getCategoryById(categoryId).name[locale] = newName;
+                    this.sortCategories();
                 }
                 else {
                     throw new LocaleNonexistsError();
@@ -132,6 +166,42 @@ class CompendiumMan {
         }
     }
     // entry methods
+    static organizeList() {
+        let sortedList = [];
+        const categories = this.list.categories;
+        for (let category of categories) {
+            let sortedCategory = {
+                "category": category,
+                "entries": new Map()
+            };
+            // grouping by first letter
+            for (let entry of category.entries) {
+                let firstLetter = entry.name.charAt(0).toUpperCase();
+                if (!(/[A-Z]/i).test(firstLetter)) {
+                    // no l10n here, it will be done elsewhere
+                    firstLetter = "OTHERS";
+                }
+                if (!sortedCategory[firstLetter]) {
+                    sortedCategory.entries[firstLetter.toUpperCase()] = [];
+                }
+                sortedCategory.entries[firstLetter].push(entry);
+            }
+            sortedList.push(sortedCategory);
+        }
+        return sortedList;
+    }
+    static sortEntries(categoryId) {
+        // just sort given categoryId
+        if (this.hasCategoryById(categoryId)) {
+            this.getCategoryById(categoryId).entries.sort((a, b) => {
+                // we don't care about letter case
+                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+            });
+        }
+        else {
+            throw new CategoryNonexistsError();
+        }
+    }
     static addEntry(categoryId, name, nameLink, author, authorLink, modes) {
         if (this.hasCategoryById(categoryId)) {
             this.getCategoryById(categoryId).entries.push({
@@ -142,6 +212,36 @@ class CompendiumMan {
                 authorLink,
                 modes
             });
+            this.sortEntries(categoryId);
+        }
+        else {
+            throw new CategoryNonexistsError();
+        }
+    }
+    static updateEntry(oldCategoryId, newCategoryId, entryId, name, nameLink, author, authorLink, modes) {
+        if (this.hasCategoryById(oldCategoryId)) {
+            if (this.hasEntityById(entryId)) {
+                this.getCategoryById(oldCategoryId).entries[entryId] = {
+                    "id": entryId,
+                    name,
+                    nameLink,
+                    author,
+                    authorLink,
+                    modes
+                };
+                if (newCategoryId !== oldCategoryId) {
+                    this.getCategoryById(newCategoryId).entries.push(Object.assign({}, this.getCategoryById(oldCategoryId).entries[entryId]));
+                    let index = this.getCategoryById(oldCategoryId).entries.findIndex((item) => {
+                        return item.id === entryId;
+                    });
+                    this.getCategoryById(oldCategoryId).entries.splice(index, 1);
+                    this.sortEntries(newCategoryId);
+                }
+                this.sortEntries(oldCategoryId);
+            }
+            else {
+                throw new EntryNonexistsError();
+            }
         }
         else {
             throw new CategoryNonexistsError();
@@ -164,30 +264,8 @@ class CompendiumMan {
         return modes;
     }
     // TODO modesToString
-    static updateEntry(oldCategory, newCategory, id, name, nameLink, author, authorLink, modes) {
-        if (this.list.categories[oldCategory]) {
-            if (this.list.categories[oldCategory][id]) {
-                this.list.categories[oldCategory][id] = {
-                    name,
-                    nameLink,
-                    author,
-                    authorLink,
-                    modes
-                };
-                if (newCategory !== oldCategory) {
-                    this.list.categories[newCategory][id] = Object.assign({}, this.list.categories[oldCategory][id]);
-                    delete this.list.categories[oldCategory][id];
-                }
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
     // display methods
+    // TODO need a better method name
     static getDisplay() {
         const $container = document.createElement("div");
         $container.classList.add("display-category");

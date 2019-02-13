@@ -8,6 +8,12 @@ import eModes from "./eModes.js";
 import iEntryData from "./iEntryData.js";
 import CompendiumList from "./iCompendiumList.js";
 import iCategory from "./iCategory.js";
+import iSortedCategory from "./iSortedCategory.js";
+
+interface CategoryIdNameList {
+  "name": string;
+  "id": number;
+}
 
 abstract class CompendiumMan {
   private static list: CompendiumList = {
@@ -27,36 +33,64 @@ abstract class CompendiumMan {
     return false;
   }
 
-  private static get CategoryNames() {
+  private static get CategoryNames(): string[] {
     let categories = [];
-    for (let item of this.list.categories) {
-      categories.push(item.name);
+    for (let category of this.list.categories) {
+      categories.push(category.name);
     }
     return categories;
   }
 
-  private static get CategoryIds() {
+  public static get CategoryIdNameList(): CategoryIdNameList[] {
     let categories = [];
-    for (let item of this.list.categories) {
-      categories.push(item.id);
+    for (let category of this.list.categories) {
+      categories.push({
+        "name": category.name,
+        "id": category.id
+      });
     }
     return categories;
   }
 
-  public static getEntryData(categoryName: string, key: string|number): iEntryData {
-    if (this.list.categories[categoryName]) {
-      if (this.list.categories[categoryName][key]) {
-        return this.list.categories[categoryName][key];
+  private static get CategoryIds(): number[] {
+    let categories = [];
+    for (let category of this.list.categories) {
+      categories.push(category.id);
+    }
+    return categories;
+  }
+
+  private static hasEntityById(entityId: number): boolean {
+    if (this.EntityIds.includes(entityId)) {
+      return true;
+    }
+    return false;
+  }
+
+  private static get EntityIds(): number[] {
+    let entities = [];
+
+    for (let category of this.list.categories) {
+      for (let entry of category.entries) {
+        entities.push(entry.id);
+      }
+    }
+    return entities;
+  }
+
+  public static getEntryDataById(categoryId: number, entityId: number): iEntryData {
+    if (this.hasCategoryById(categoryId)) {
+      if (this.hasEntityById(entityId)) {
+        let result = this.getCategoryById(categoryId).entries.find((item) => {
+          return item.id === entityId;
+        });
+        return result;
       } else {
         throw new EntryNonexistsError();
       }
     } else {
       throw new CategoryNonexistsError();
     }
-  }
-
-  public static getCategories(): Array<string> {
-    return Object.keys(this.list.categories).sort();
   }
 
   private static get NextCategoryId(): number {
@@ -81,6 +115,13 @@ abstract class CompendiumMan {
   }
 
   // category methods
+  private static sortCategories(): void {
+    this.list.categories.sort((a: iCategory, b: iCategory) => {
+      // we don't care about letter case
+      return a.name[l10n.currentLocale].toLowerCase().localeCompare(b.name[l10n.currentLocale].toLowerCase());
+    });
+  }
+
   public static deleteCategory(name: string): void {
     if (this.list.categories[name]) {
       delete this.list.categories[name];
@@ -90,6 +131,7 @@ abstract class CompendiumMan {
   }
 
   public static addCategory(name: string, description: string): void {
+    // TODO sort the categories
     if (this.CategoryNames.includes(name)) {
       throw new CategoryExistsError();
     } else {
@@ -103,6 +145,8 @@ abstract class CompendiumMan {
         },
         "entries": []
       });
+
+      this.sortCategories();
     }
   }
 
@@ -113,6 +157,7 @@ abstract class CompendiumMan {
       } else {
         if (l10n.hasLocale(locale)) {
           this.getCategoryById(categoryId).name[locale] = newName;
+          this.sortCategories();
         } else {
           throw new LocaleNonexistsError();
         }
@@ -147,6 +192,47 @@ abstract class CompendiumMan {
   }
 
   // entry methods
+  public static organizeList(): iSortedCategory[] {
+  let sortedList: iSortedCategory[] = [];
+
+  const categories = this.list.categories;
+
+  for (let category of categories) {
+    let sortedCategory: iSortedCategory = {
+      "category": category,
+      "entries": new Map()
+    };
+
+    // grouping by first letter
+    for (let entry of category.entries) {
+      let firstLetter = entry.name.charAt(0).toUpperCase();
+
+      if (!(/[A-Z]/i).test(firstLetter)) {
+        // no l10n here, it will be done elsewhere
+        firstLetter = "OTHERS";
+      }
+      if (!sortedCategory[firstLetter]) {
+        sortedCategory.entries[firstLetter.toUpperCase()] = [];
+      }
+      sortedCategory.entries[firstLetter].push(entry);
+    }
+    sortedList.push(sortedCategory);
+  }
+  return sortedList;
+}
+
+  private static sortEntries(categoryId: number): void {
+    // just sort given categoryId
+    if (this.hasCategoryById(categoryId)) {
+      this.getCategoryById(categoryId).entries.sort((a: iEntryData, b: iEntryData) => {
+        // we don't care about letter case
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    });
+    } else {
+      throw new CategoryNonexistsError();
+    }
+  }
+
   public static addEntry(categoryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
     if (this.hasCategoryById(categoryId)) {
       this.getCategoryById(categoryId).entries.push({
@@ -157,6 +243,38 @@ abstract class CompendiumMan {
         authorLink,
         modes
       });
+
+      this.sortEntries(categoryId);
+    } else {
+      throw new CategoryNonexistsError();
+    }
+  }
+
+  public static updateEntry(oldCategoryId: number, newCategoryId: number, entryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
+    if (this.hasCategoryById(oldCategoryId)) {
+      if (this.hasEntityById(entryId)) {
+        this.getCategoryById(oldCategoryId).entries[entryId] = {
+          "id": entryId,
+          name,
+          nameLink,
+          author,
+          authorLink,
+          modes
+        }
+
+        if (newCategoryId !== oldCategoryId) {
+          this.getCategoryById(newCategoryId).entries.push(Object.assign({}, this.getCategoryById(oldCategoryId).entries[entryId]));
+
+          let index = this.getCategoryById(oldCategoryId).entries.findIndex((item) => {
+            return item.id === entryId;
+          });
+          this.getCategoryById(oldCategoryId).entries.splice(index, 1);
+          this.sortEntries(newCategoryId);
+        }
+        this.sortEntries(oldCategoryId);
+      } else {
+        throw new EntryNonexistsError();
+      }
     } else {
       throw new CategoryNonexistsError();
     }
@@ -185,30 +303,8 @@ abstract class CompendiumMan {
   }
   // TODO modesToString
 
-  public static updateEntry(oldCategory: string, newCategory: string, id: string|number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
-    if (this.list.categories[oldCategory]) {
-      if (this.list.categories[oldCategory][id]) {
-        this.list.categories[oldCategory][id] = {
-          name,
-          nameLink,
-          author,
-          authorLink,
-          modes
-        };
-
-        if (newCategory !== oldCategory) {
-          this.list.categories[newCategory][id] = Object.assign({}, this.list.categories[oldCategory][id]);
-          delete this.list.categories[oldCategory][id];
-        }
-      } else {
-        throw new EntryNonexistsError();
-      }
-    } else {
-      throw new CategoryNonexistsError();
-    }
-  }
-
   // display methods
+  // TODO need a better method name
   public static getDisplay(): HTMLDivElement {
     const $container: HTMLDivElement = document.createElement("div");
     $container.classList.add("display-category");
