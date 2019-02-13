@@ -95,9 +95,12 @@ class CompendiumMan {
             return a.name[l10n.currentLocale].toLowerCase().localeCompare(b.name[l10n.currentLocale].toLowerCase());
         });
     }
-    static deleteCategory(name) {
-        if (this.list.categories[name]) {
-            delete this.list.categories[name];
+    static deleteCategory(categoryId) {
+        if (this.hasCategoryById(categoryId)) {
+            let index = this.list.categories.findIndex((item) => {
+                return item.id === categoryId;
+            });
+            this.list.categories.splice(index, 1);
         }
         else {
             throw new CategoryNonexistsError();

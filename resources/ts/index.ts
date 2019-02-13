@@ -392,9 +392,13 @@ function $display_click (event: Event): void {
     target.parentElement.dataset.hidden = "";
   } else if (target.classList.contains("display-category-delete-yes")) {
     try {
-      CompendiumMan.deleteCategory((<HTMLElement>target.parentElement.previousElementSibling.previousElementSibling.previousElementSibling).textContent);updateDisplay();
-    } catch {
-      window.alert("Failed to delete. Did you modify the document?\nIf not, try exporting, reload, importing, then delete.");
+      let categoryId = parseInt((<HTMLElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId, 10);
+      console.log(categoryId);
+      CompendiumMan.deleteCategory(categoryId);
+      updateDisplay();
+    } catch (ex) {
+      // TODO make this a better message
+      window.alert(`Failed to delete: ${ex}`);
     }
   } else if (target.classList.contains("display-category-add_entry")) {
     delete $newEntry.dataset.hidden;

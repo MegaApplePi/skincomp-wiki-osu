@@ -122,9 +122,12 @@ abstract class CompendiumMan {
     });
   }
 
-  public static deleteCategory(name: string): void {
-    if (this.list.categories[name]) {
-      delete this.list.categories[name];
+  public static deleteCategory(categoryId: number): void {
+    if (this.hasCategoryById(categoryId)) {
+      let index = this.list.categories.findIndex((item) => {
+        return item.id === categoryId;
+      });
+      this.list.categories.splice(index, 1);
     } else {
       throw new CategoryNonexistsError();
     }
