@@ -394,7 +394,6 @@ function $display_click (event: Event): void {
   } else if (target.classList.contains("display-category-delete-yes")) {
     try {
       let categoryId = parseInt((<HTMLElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId, 10);
-      console.log(categoryId);
       CompendiumMan.deleteCategory(categoryId);
       updateDisplay();
     } catch (ex) {
