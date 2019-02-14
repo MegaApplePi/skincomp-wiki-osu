@@ -71,6 +71,7 @@ const $exportClose: HTMLDivElement = document.querySelector(".export-close");
 const $exportStatus: HTMLDivElement = document.querySelector(".export-status");
 
 // parse
+const $parseSaveto: HTMLTextAreaElement = document.querySelector(".parse-saveto");
 const $parseOutput: HTMLTextAreaElement = document.querySelector("#parse-output");
 const $parseCopy: HTMLDivElement = document.querySelector(".parse-copy");
 const $parseClose: HTMLDivElement = document.querySelector(".parse-close");
@@ -586,10 +587,14 @@ interface parsedOutput {
   "category": string;
   "text": string;
 }
+// TODO make these two varibles one
+let files: parsedOutput[] = [];
+let filesCurrentIndex: number = 0;
 function parseList(kind: eOutputType) {
   delete $parse.dataset.hidden;
 
-  let files: parsedOutput[] = [];
+  files = [];
+  filesCurrentIndex = 0;
 
   const sortedList = CompendiumMan.organizeList();
 
@@ -662,11 +667,13 @@ function parseList(kind: eOutputType) {
     files.push(parsedFile);
   }
   if (files[0]) {
+    $parseSaveto.textContent = files[0].category;
     $parseOutput.textContent = files[0].text;
   }
   if (files.length > 1) {
     delete $parseNav.dataset.hidden;
-    // TODO parseNav
+    $parsePrev.textContent = "Last";
+    $parseNext.textContent = "Next";
   }
 }
 function $controlParseMd_click() {
@@ -718,13 +725,39 @@ function $parseClose_click() {
 }
 $parseClose.addEventListener("click", $parseClose_click);
 
+function navUpdate() {
+  $parseSaveto.textContent = files[filesCurrentIndex].category;
+  if (!files[filesCurrentIndex - 1]) {
+    $parsePrev.textContent = "Last";
+  } else {
+    $parsePrev.textContent = "Previous";
+  }
+  if (!files[filesCurrentIndex + 1]) {
+    $parseNext.textContent = "First";
+  } else {
+    $parseNext.textContent = "Next";
+  }
+}
+
 function $parsePrev_click() {
-  // TODO
+  if (files[filesCurrentIndex - 1]) {
+    $parseOutput.textContent = files[--filesCurrentIndex].text;
+  } else {
+    filesCurrentIndex = files.length - 1;
+    $parseOutput.textContent = files[filesCurrentIndex].text;
+  }
+  navUpdate();
 }
 $parsePrev.addEventListener("click", $parsePrev_click);
 
 function $parseNext_click() {
-  // TODO
+  if (files[filesCurrentIndex + 1]) {
+    $parseOutput.textContent = files[++filesCurrentIndex].text;
+  } else {
+    filesCurrentIndex = 0;
+    $parseOutput.textContent = files[filesCurrentIndex].text;
+  }
+  navUpdate();
 }
 $parseNext.addEventListener("click", $parseNext_click);
 

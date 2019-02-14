@@ -61,6 +61,7 @@ const $exportCopy = document.querySelector(".export-copy");
 const $exportClose = document.querySelector(".export-close");
 const $exportStatus = document.querySelector(".export-status");
 // parse
+const $parseSaveto = document.querySelector(".parse-saveto");
 const $parseOutput = document.querySelector("#parse-output");
 const $parseCopy = document.querySelector(".parse-copy");
 const $parseClose = document.querySelector(".parse-close");
@@ -522,9 +523,13 @@ var eOutputType;
     eOutputType[eOutputType["Markdown"] = 0] = "Markdown";
     eOutputType[eOutputType["BBCode"] = 1] = "BBCode";
 })(eOutputType || (eOutputType = {}));
+// TODO make these two varibles one
+let files = [];
+let filesCurrentIndex = 0;
 function parseList(kind) {
     delete $parse.dataset.hidden;
-    let files = [];
+    files = [];
+    filesCurrentIndex = 0;
     const sortedList = CompendiumMan.organizeList();
     for (let item of sortedList) {
         let name = item.category.name[l10n.currentLocale];
@@ -593,11 +598,13 @@ function parseList(kind) {
         files.push(parsedFile);
     }
     if (files[0]) {
+        $parseSaveto.textContent = files[0].category;
         $parseOutput.textContent = files[0].text;
     }
     if (files.length > 1) {
         delete $parseNav.dataset.hidden;
-        // TODO parseNav
+        $parsePrev.textContent = "Last";
+        $parseNext.textContent = "Next";
     }
 }
 function $controlParseMd_click() {
@@ -647,12 +654,41 @@ function $parseClose_click() {
     delete $parseStatus.dataset.state;
 }
 $parseClose.addEventListener("click", $parseClose_click);
+function navUpdate() {
+    $parseSaveto.textContent = files[filesCurrentIndex].category;
+    if (!files[filesCurrentIndex - 1]) {
+        $parsePrev.textContent = "Last";
+    }
+    else {
+        $parsePrev.textContent = "Previous";
+    }
+    if (!files[filesCurrentIndex + 1]) {
+        $parseNext.textContent = "First";
+    }
+    else {
+        $parseNext.textContent = "Next";
+    }
+}
 function $parsePrev_click() {
-    // TODO
+    if (files[filesCurrentIndex - 1]) {
+        $parseOutput.textContent = files[--filesCurrentIndex].text;
+    }
+    else {
+        filesCurrentIndex = files.length - 1;
+        $parseOutput.textContent = files[filesCurrentIndex].text;
+    }
+    navUpdate();
 }
 $parsePrev.addEventListener("click", $parsePrev_click);
 function $parseNext_click() {
-    // TODO
+    if (files[filesCurrentIndex + 1]) {
+        $parseOutput.textContent = files[++filesCurrentIndex].text;
+    }
+    else {
+        filesCurrentIndex = 0;
+        $parseOutput.textContent = files[filesCurrentIndex].text;
+    }
+    navUpdate();
 }
 $parseNext.addEventListener("click", $parseNext_click);
 function $controlLocale_change() {
