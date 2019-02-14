@@ -220,7 +220,7 @@ abstract class CompendiumMan {
         others.push(entry);
         continue;
       }
-      if (!sortedCategory[firstLetter]) {
+      if (!sortedCategory.entries[firstLetter]) {
         sortedCategory.entries[firstLetter.toUpperCase()] = [];
       }
       sortedCategory.entries[firstLetter].push(entry);
