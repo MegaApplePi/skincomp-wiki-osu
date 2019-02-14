@@ -741,6 +741,8 @@ function navUpdate() {
   } else {
     $parseNext.textContent = "Next";
   }
+  delete $parseCopy.dataset.disabled;
+  $parseStatus.textContent = "";
 }
 
 function $parsePrev_click() {
