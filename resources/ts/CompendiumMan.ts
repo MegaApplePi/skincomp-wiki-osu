@@ -209,6 +209,7 @@ abstract class CompendiumMan {
       "entries": new Map()
     };
 
+    let others: iEntryData[] = []; // temporary placeholder for OTHERS
     // grouping by first letter
     for (let entry of category.entries) {
       let firstLetter = entry.name.charAt(0).toUpperCase();
@@ -216,11 +217,16 @@ abstract class CompendiumMan {
       if (!(/[A-Z]/i).test(firstLetter)) {
         // no l10n here, it will be done elsewhere
         firstLetter = "OTHERS";
+        others.push(entry);
+        continue;
       }
       if (!sortedCategory[firstLetter]) {
         sortedCategory.entries[firstLetter.toUpperCase()] = [];
       }
       sortedCategory.entries[firstLetter].push(entry);
+    }
+    if (others.length > 0) {
+      sortedCategory.entries["OTHERS"] = [...others];
     }
     sortedList.push(sortedCategory);
   }

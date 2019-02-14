@@ -621,7 +621,11 @@ function parseList(kind: eOutputType) {
 
     for (let section of Object.keys(item.entries)) {
       if (kind === eOutputType.Markdown) {
-        parsedFile.text += `\n## ${section}\n\n| ${l10n.getString("Modes")} |  |\n|---|---|\n`;
+        if (section === "OTHERS") {
+          parsedFile.text += `\n## ${l10n.getString("Others")}\n\n| ${l10n.getString("Modes")} |  |\n|---|---|\n`;
+        } else {
+          parsedFile.text += `\n## ${section}\n\n| ${l10n.getString("Modes")} |  |\n|---|---|\n`;
+        }
       } else {
         parsedFile.text += "[notice]";
       }
