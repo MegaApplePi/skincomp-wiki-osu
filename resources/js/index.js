@@ -365,8 +365,8 @@ function $display_click(event) {
         $newEntryMania.checked = false;
     }
     else if (target.classList.contains("entry-edit")) {
-        $editEntry.dataset.categoryId = target.parentElement.parentElement.parentElement.dataset.categoryId;
-        $editEntry.dataset.entryId = target.parentElement.dataset.id;
+        $editEntry.dataset.categoryId = target.parentElement.parentElement.parentElement.parentElement.dataset.categoryId;
+        $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
         const categories = CompendiumMan.CategoryIdNameList;
         const entryData = CompendiumMan.getEntryDataById(parseInt($editEntry.dataset.categoryId, 10), parseInt($editEntry.dataset.entryId, 10));
         $editEntryName.value = entryData.name;

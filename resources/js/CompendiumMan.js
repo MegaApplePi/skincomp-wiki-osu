@@ -368,9 +368,19 @@ class CompendiumMan {
             }
             $descriptionGroup.insertAdjacentElement("beforeend", $descriptionEdit);
             // entries
-            const $entries = document.createElement("ul");
-            $entries.classList.add("category-entry");
-            $group.insertAdjacentElement("beforeend", $entries);
+            const $table = document.createElement("table");
+            $table.classList.add("category-entry");
+            $group.insertAdjacentElement("beforeend", $table);
+            const $trHeading = document.createElement("tr");
+            $table.insertAdjacentElement("beforeend", $trHeading);
+            const $thEntry = document.createElement("th");
+            $trHeading.insertAdjacentElement("beforeend", $thEntry);
+            const $thModes = document.createElement("th");
+            $thModes.textContent = l10n.getString("Modes");
+            $trHeading.insertAdjacentElement("beforeend", $thModes);
+            const $thActions = document.createElement("th");
+            $thActions.textContent = "Actions";
+            $trHeading.insertAdjacentElement("beforeend", $thActions);
             const $addEntry = document.createElement("div");
             $addEntry.classList.add("display-category-add_entry", "button");
             $addEntry.textContent = "Add Entry";
@@ -378,16 +388,26 @@ class CompendiumMan {
             $group.insertAdjacentElement("beforeend", $addEntry);
             for (let entry of category.entries) {
                 // display the entry
-                const $entry = document.createElement("li");
-                $entry.dataset.id = entry.id.toString();
+                const $tr = document.createElement("tr");
+                $tr.dataset.id = entry.id.toString();
+                $table.insertAdjacentElement("beforeend", $tr);
+                const $tdEntry = document.createElement("td");
+                $tr.insertAdjacentElement("beforeend", $tdEntry);
+                const $tdMode = document.createElement("td");
+                $tr.insertAdjacentElement("beforeend", $tdMode);
+                const $tdActions = document.createElement("td");
+                $tr.insertAdjacentElement("beforeend", $tdActions);
                 const $name = document.createElement("a");
                 $name.href = `https://osu.ppy.sh/community/forums/topics/${entry.nameLink}`;
                 $name.textContent = entry.name;
                 $name.target = "_blank";
+                $tdEntry.insertAdjacentElement("beforeend", $name);
+                $tdEntry.insertAdjacentText("beforeend", ` ${l10n.getString("by")} `);
                 const $author = document.createElement("a");
                 $author.href = `https://osu.ppy.sh/users/${entry.authorLink}`;
                 $author.textContent = entry.author;
                 $author.target = "_blank";
+                $tdEntry.insertAdjacentElement("beforeend", $author);
                 let modes = [];
                 if (entry.modes & eModes.Standard) {
                     modes.push("S");
@@ -403,29 +423,23 @@ class CompendiumMan {
                 }
                 const $modes = document.createElement("span");
                 $modes.textContent = modes.join(" ");
-                $entry.insertAdjacentElement("beforeend", $name);
-                $entry.insertAdjacentText("beforeend", ` ${l10n.getString("by")} `);
-                $entry.insertAdjacentElement("beforeend", $author);
-                if (modes.length > 0) {
-                    $entry.insertAdjacentText("beforeend", " - ");
-                    $entry.insertAdjacentElement("beforeend", $modes);
-                }
+                $tdMode.insertAdjacentElement("beforeend", $modes);
                 // edit button
                 const $edit = document.createElement("span");
                 $edit.classList.add("entry-edit", "button");
                 $edit.textContent = "edit";
-                $entry.insertAdjacentElement("beforeend", $edit);
+                $tdActions.insertAdjacentElement("beforeend", $edit);
                 // delete button
                 const $delete = document.createElement("span");
                 $delete.classList.add("entry-delete", "button-alt");
                 $delete.textContent = "delete";
-                $entry.insertAdjacentElement("beforeend", $delete);
+                $tdActions.insertAdjacentElement("beforeend", $delete);
                 // delete -> confirm
                 const $deleteConfirm = document.createElement("span");
                 $deleteConfirm.classList.add("entry-delete-confirm");
                 $deleteConfirm.dataset.hidden = "";
                 $deleteConfirm.textContent = "Confirm:";
-                $entry.insertAdjacentElement("beforeend", $deleteConfirm);
+                $tdActions.insertAdjacentElement("beforeend", $deleteConfirm);
                 const $deleteNo = document.createElement("span");
                 $deleteNo.classList.add("entry-delete-no", "button");
                 $deleteNo.textContent = "No, whoops";
@@ -434,7 +448,6 @@ class CompendiumMan {
                 $deleteYes.classList.add("entry-delete-yes", "button-alt");
                 $deleteYes.textContent = "Yes, delete";
                 $deleteConfirm.insertAdjacentElement("beforeend", $deleteYes);
-                $entries.insertAdjacentElement("beforeend", $entry);
             }
         }
         return $container;

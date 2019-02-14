@@ -415,9 +415,9 @@ function $display_click (event: Event): void {
     $newEntryCatch.checked = false;
     $newEntryMania.checked = false;
   } else if (target.classList.contains("entry-edit")) {
-    $editEntry.dataset.categoryId = (<HTMLElement>target.parentElement.parentElement.parentElement).dataset.categoryId;
+    $editEntry.dataset.categoryId = (<HTMLElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId;
 
-    $editEntry.dataset.entryId = target.parentElement.dataset.id;
+    $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
 
     const categories = CompendiumMan.CategoryIdNameList;
 
