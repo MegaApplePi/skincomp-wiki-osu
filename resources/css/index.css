@@ -98,9 +98,12 @@
   .body .entry-delete-no {
     margin: 0 2px; }
   .body .display {
-    margin: 0 10%; }
+    margin: 0 10%;
+    margin-bottom: 50px; }
     .body .display-category {
       margin-top: 16px; }
+      .body .display-category-head {
+        margin-top: 16px; }
       .body .display-category-name {
         font-weight: bold;
         font-size: 2em; }
@@ -118,8 +121,18 @@
         margin-left: 4px; }
       .body .display-category-delete-no {
         margin: 0 2px; }
-    .body .display .category-entry li {
-      margin: 2px 0; }
+    .body .display .category-entry {
+      table-layout: fixed; }
+      .body .display .category-entry tr th {
+        border-bottom: 2px solid #08979c; }
+        .body .display .category-entry tr th:nth-child(1) {
+          width: 75%; }
+        .body .display .category-entry tr th:nth-child(2) {
+          width: 50px; }
+        .body .display .category-entry tr th:nth-child(3) {
+          width: 105px; }
+      .body .display .category-entry tr td {
+        border-bottom: 1px solid #13c2c2; }
 
 #export-output {
   width: 100%; }

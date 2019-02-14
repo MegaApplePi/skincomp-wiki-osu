@@ -157,9 +157,14 @@
   }
   .display {
     margin: 0 10%;
+    margin-bottom: 50px;
 
     &-category {
       margin-top: 16px;
+
+      &-head {
+        margin-top: 16px;
+      }
 
       &-name {
         font-weight: bold;
@@ -197,8 +202,27 @@
 
     .category {
       &-entry {
-        li {
-          margin: 2px 0;
+        table-layout: fixed;
+
+        tr {
+          th {
+            border-bottom: 2px solid #08979c;
+
+            &:nth-child(1) {
+              width: 75%;
+            }
+
+            &:nth-child(2) {
+              width: 50px;
+            }
+
+            &:nth-child(3) {
+              width: 105px;
+            }
+          }
+          td {
+            border-bottom: 1px solid #13c2c2;
+          }
         }
       }
     }
