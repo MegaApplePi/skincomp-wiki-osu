@@ -20,6 +20,7 @@
         text-decoration: none; }
     .body .button-alt {
       box-shadow: inset 0 0 0 2px #13c2c2;
+      background-color: #fff;
       color: #000;
       cursor: pointer;
       display: inline-flex;
@@ -62,13 +63,15 @@
       z-index: 1; }
     .body .import-form, .body .export-form, .body .parse-form, .body .new_category-form, .body .new_entry-form, .body .edit_entry-form {
       background-color: #fff;
+      max-height: 80vh;
+      overflow: auto;
       padding: 8px;
       position: absolute;
-      width: 400px;
+      width: 600px;
       z-index: 2; }
       .body .import-form textarea, .body .export-form textarea, .body .parse-form textarea, .body .new_category-form textarea, .body .new_entry-form textarea, .body .edit_entry-form textarea {
         box-sizing: border-box;
-        height: 200px;
+        height: 300px;
         resize: none;
         width: 100%; }
       .body .import-form label, .body .export-form label, .body .parse-form label, .body .new_category-form label, .body .new_entry-form label, .body .edit_entry-form label {
@@ -122,11 +125,14 @@
       .body .display-category-delete-no {
         margin: 0 2px; }
     .body .display .category-entry {
-      table-layout: fixed; }
+      table-layout: fixed;
+      width: 100%; }
+      .body .display .category-entry tr:not(:first-of-type):hover {
+        background-color: #b5f5ec; }
       .body .display .category-entry tr th {
         border-bottom: 2px solid #08979c; }
         .body .display .category-entry tr th:nth-child(1) {
-          width: 75%; }
+          width: 50%; }
         .body .display .category-entry tr th:nth-child(2) {
           width: 50px; }
         .body .display .category-entry tr th:nth-child(3) {

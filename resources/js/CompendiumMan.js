@@ -6,6 +6,7 @@ import ImportError from "./Error/ImportError.js";
 import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
+import Import from "./Import.js";
 class CompendiumMan {
     static get List() {
         return Object.assign({}, this.list);
@@ -47,28 +48,24 @@ class CompendiumMan {
         return false;
     }
     static get EntityIds() {
-        let entities = [];
-        for (let category of this.list.categories) {
-            for (let entry of category.entries) {
-                entities.push(entry.id);
-            }
+        let entries = [];
+        for (let entry of this.list.entries) {
+            entries.push(entry.id);
         }
-        return entities;
+        return entries;
     }
-    static getEntryDataById(categoryId, entityId) {
-        if (this.hasCategoryById(categoryId)) {
-            if (this.hasEntityById(entityId)) {
-                let result = this.getCategoryById(categoryId).entries.find((item) => {
-                    return item.id === entityId;
-                });
-                return result;
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
+    static getEntriesByCategoryId(categoryId) {
+        throw new Error("NOT IMPLEMENTED");
+    }
+    static getEntryById(entityId) {
+        if (this.hasEntityById(entityId)) {
+            let result = this.list.entries.find((item) => {
+                return item.id === entityId;
+            });
+            return result;
         }
         else {
-            throw new CategoryNonexistsError();
+            throw new EntryNonexistsError();
         }
     }
     static get NextCategoryId() {
@@ -78,10 +75,9 @@ class CompendiumMan {
         return this.list.nextEntryId++;
     }
     // import and export
-    static import(input) {
+    static import(data) {
         try {
-            // TODO make sure all expected keys exist
-            this.list = input;
+            this.list = Import.readData(data);
         }
         catch (ex) {
             throw new ImportError(ex);
@@ -121,8 +117,7 @@ class CompendiumMan {
                 },
                 "description": {
                     "en": description
-                },
-                "entries": []
+                }
             });
             this.sortCategories();
         }
@@ -181,7 +176,10 @@ class CompendiumMan {
             };
             let others = []; // temporary placeholder for OTHERS
             // grouping by first letter
-            for (let entry of category.entries) {
+            for (let entry of this.list.entries) {
+                if (!entry.categories.includes(category.id)) {
+                    continue;
+                }
                 let firstLetter = entry.name.charAt(0).toUpperCase();
                 if (!(/[A-Z]/i).test(firstLetter)) {
                     // no l10n here, it will be done elsewhere
@@ -201,80 +199,63 @@ class CompendiumMan {
         }
         return sortedList;
     }
-    static sortEntries(categoryId) {
-        // just sort given categoryId
-        if (this.hasCategoryById(categoryId)) {
-            this.getCategoryById(categoryId).entries.sort((a, b) => {
-                // we don't care about letter case
-                return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    static sortEntries() {
+        this.list.entries.sort((a, b) => {
+            // we don't care about letter case
+            return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+        });
+    }
+    static addEntry(categoryIds, name, nameLink, author, authorLink, modes) {
+        for (let id of categoryIds) {
+            if (!this.hasCategoryById(id)) {
+                throw new CategoryNonexistsError();
+            }
+        }
+        this.list.entries.push({
+            "id": this.NextEntryId,
+            "categories": categoryIds,
+            name,
+            nameLink,
+            author,
+            authorLink,
+            modes
+        });
+        this.sortEntries();
+    }
+    static deleteEntry(entryId) {
+        if (this.hasEntityById(entryId)) {
+            let index = this.list.entries.findIndex((entry) => {
+                return entry.id === entryId;
             });
+            delete this.list.entries[index];
         }
         else {
-            throw new CategoryNonexistsError();
+            throw new EntryNonexistsError();
         }
     }
-    static addEntry(categoryId, name, nameLink, author, authorLink, modes) {
-        if (this.hasCategoryById(categoryId)) {
-            this.getCategoryById(categoryId).entries.push({
-                "id": this.NextEntryId,
+    static updateEntry(entryId, categoryIds, name, nameLink, author, authorLink, modes) {
+        for (let id of categoryIds) {
+            if (!this.hasCategoryById(id)) {
+                throw new CategoryNonexistsError();
+            }
+        }
+        if (this.hasEntityById(entryId)) {
+            let index = this.list.entries.findIndex((entry) => {
+                return entry.id === entryId;
+            });
+            this.list.entries[index] = {
+                "id": entryId,
+                "categories": categoryIds,
                 name,
                 nameLink,
                 author,
                 authorLink,
                 modes
-            });
-            this.sortEntries(categoryId);
+            };
+            this.sortEntries();
         }
         else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static deleteEntry(categoryId, entryId) {
-        if (this.hasCategoryById(categoryId)) {
-            if (this.hasEntityById(entryId)) {
-                let index = this.getCategoryById(categoryId).entries.findIndex((item) => {
-                    return item.id === entryId;
-                });
-                this.getCategoryById(categoryId).entries.splice(index, 1);
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
-        }
-    }
-    static updateEntry(oldCategoryId, newCategoryId, entryId, name, nameLink, author, authorLink, modes) {
-        if (this.hasCategoryById(oldCategoryId)) {
-            if (this.hasEntityById(entryId)) {
-                let index = this.getCategoryById(oldCategoryId).entries.findIndex((item) => {
-                    return item.id === entryId;
-                });
-                this.getCategoryById(oldCategoryId).entries[index] = {
-                    "id": entryId,
-                    name,
-                    nameLink,
-                    author,
-                    authorLink,
-                    modes
-                };
-                if (newCategoryId !== oldCategoryId) {
-                    this.getCategoryById(newCategoryId).entries.push(Object.assign({}, this.getCategoryById(oldCategoryId).entries[entryId]));
-                    let index = this.getCategoryById(oldCategoryId).entries.findIndex((item) => {
-                        return item.id === entryId;
-                    });
-                    this.getCategoryById(oldCategoryId).entries.splice(index, 1);
-                    this.sortEntries(newCategoryId);
-                }
-                this.sortEntries(oldCategoryId);
-            }
-            else {
-                throw new EntryNonexistsError();
-            }
-        }
-        else {
-            throw new CategoryNonexistsError();
+            throw new EntryNonexistsError();
         }
     }
     static booleansToModes(s, t, c, m) {
@@ -387,12 +368,10 @@ class CompendiumMan {
             const $thActions = document.createElement("th");
             $thActions.textContent = "Actions";
             $trHeading.insertAdjacentElement("beforeend", $thActions);
-            const $addEntry = document.createElement("div");
-            $addEntry.classList.add("display-category-add_entry", "button");
-            $addEntry.textContent = "Add Entry";
-            $addEntry.dataset.categoryName = category.name[l10n.currentLocale];
-            $group.insertAdjacentElement("beforeend", $addEntry);
-            for (let entry of category.entries) {
+            for (let entry of this.list.entries) {
+                if (!entry.categories.includes(category.id)) {
+                    continue;
+                }
                 // display the entry
                 const $tr = document.createElement("tr");
                 $tr.dataset.id = entry.id.toString();
@@ -461,7 +440,8 @@ class CompendiumMan {
 }
 CompendiumMan.list = {
     "categories": [],
-    "_version": 1,
+    "entries": [],
+    "_version": Import.version,
     "nextEntryId": 0,
     "nextCategoryId": 0
 };
