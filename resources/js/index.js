@@ -37,6 +37,7 @@ const $newEntryCatch = document.querySelector("#new_entry-catch");
 const $newEntryMania = document.querySelector("#new_entry-mania");
 const $newEntrySubmit = document.querySelector(".new_entry-submit");
 const $newEntryCancel = document.querySelector(".new_entry-cancel");
+const $newEntryStatus = document.querySelector(".new_entry-status");
 // edit entry
 const $editEntryCategory = document.querySelector(".edit_entry-category");
 const $editEntryName = document.querySelector("#edit_entry-name");
@@ -50,6 +51,7 @@ const $editEntryMania = document.querySelector("#edit_entry-mania");
 const $editEntrySubmit = document.querySelector(".edit_entry-submit");
 const $editEntryReset = document.querySelector(".edit_entry-reset");
 const $editEntryCancel = document.querySelector(".edit_entry-cancel");
+const $editEntryStatus = document.querySelector(".edit_entry-status");
 // import
 const $importInput = document.querySelector("#import-input");
 const $importSubmit = document.querySelector(".import-submit");
@@ -131,10 +133,18 @@ function $newEntrySubmit_click() {
         $newEntryAuthorLink.dataset.invalid = "";
         hasErrors = true;
     }
+    if (hasErrors) {
+        $editEntryStatus.textContent = "Fix errors in red.";
+    }
+    const categoryIds = booleanToCatIds(Array.from($newEntryCategory.querySelectorAll("input[type=checkbox]")));
+    if (categoryIds.length === 0) {
+        $newEntryStatus.dataset.error = "";
+        $newEntryStatus.textContent = "Fix errors in red (if any) and select a category.";
+        hasErrors = true;
+    }
     if (!hasErrors) {
         $newEntry.dataset.hidden = "";
         let modes = CompendiumMan.booleansToModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
-        const categoryIds = booleanToCatIds(Array.from($newEntryCategory.querySelectorAll("input[type=checkbox]")));
         CompendiumMan.addEntry(categoryIds, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
         updateDisplay();
         $newEntryName.value = "";
@@ -200,9 +210,12 @@ function $newCategoryCancel_click() {
     $newCategoryName.value = "";
     $newCategoryDescription.value = "";
     delete $newCategoryName.dataset.invalid;
+    $editEntryStatus.textContent = "";
+    delete $editEntryStatus.dataset.error;
 }
 $newCategoryCancel.addEventListener("click", $newCategoryCancel_click);
 function resetEditEntry() {
+    // TODO need to reset for categories
     $editEntryName.value = "";
     $editEntryNameLink.value = "";
     $editEntryAuthor.value = "";
@@ -211,16 +224,66 @@ function resetEditEntry() {
     $editEntryTaiko.checked = false;
     $editEntryCatch.checked = false;
     $editEntryMania.checked = false;
+    $editEntryStatus.textContent = "";
+    delete $editEntryStatus.dataset.error;
 }
 function $editEntrySubmit_click() {
-    let modes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
+    let hasErrors = false;
+    if ($editEntryName.value.trim() === "") {
+        $editEntryName.dataset.invalid = "";
+        hasErrors = true;
+    }
+    else {
+        delete $editEntryName.dataset.invalid;
+    }
+    // ACCEPT https://osu.ppy.sh/community/forums/topics/#, /community/forums/topics/#, /forum/t/#, or #
+    let nameLink = $editEntryNameLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/(?:community\/)?forums?\/t(?:opics)?\/)?(\d+)$/);
+    if (nameLink) {
+        delete $editEntryNameLink.dataset.invalid;
+        // the second item is the thing we want
+        nameLink = nameLink[1];
+    }
+    else {
+        $editEntryNameLink.dataset.invalid = "";
+        hasErrors = true;
+    }
+    if ($editEntryAuthor.value.trim() === "") {
+        $editEntryAuthor.dataset.invalid = "";
+        hasErrors = true;
+    }
+    else {
+        delete $editEntryAuthor.dataset.invalid;
+    }
+    // ACCEPT https://osu.ppy.sh/users/#, /users/#, /u/#, or #
+    let authorLink = $editEntryAuthorLink.value.match(/^(?:(?:https?:\/\/osu\.ppy\.sh)?\/u(?:sers)?\/)?(\d+)$/);
+    if (authorLink) {
+        delete $editEntryAuthorLink.dataset.invalid;
+        // the second item is the thing we want
+        authorLink = authorLink[1];
+    }
+    else {
+        $editEntryAuthorLink.dataset.invalid = "";
+        hasErrors = true;
+    }
     const categoryIds = booleanToCatIds(Array.from($editEntryCategory.querySelectorAll("input[type=checkbox]")));
-    let entryId = parseInt($editEntry.dataset.entryId, 10);
-    // TODO missing validation
-    CompendiumMan.updateEntry(entryId, categoryIds, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
-    updateDisplay();
-    resetEditEntry();
-    $editEntry.dataset.hidden = "";
+    if (hasErrors) {
+        $editEntryStatus.textContent = "Fix errors in red.";
+    }
+    if (categoryIds.length === 0) {
+        $editEntryStatus.dataset.error = "";
+        $editEntryStatus.textContent = "Fix errors in red (if any) and select a category.";
+        hasErrors = true;
+    }
+    if (!hasErrors) {
+        let modes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
+        $editEntryStatus.textContent = "";
+        delete $editEntryStatus.dataset.error;
+        let entryId = parseInt($editEntry.dataset.entryId, 10);
+        CompendiumMan.updateEntry(entryId, categoryIds, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
+        updateDisplay();
+        resetEditEntry();
+        $editEntry.dataset.hidden = "";
+    }
 }
 $editEntrySubmit.addEventListener("click", $editEntrySubmit_click);
 function $editEntryReset_click() {
