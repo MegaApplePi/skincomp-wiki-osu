@@ -198,39 +198,41 @@ abstract class CompendiumMan {
 
   // entry methods
   public static organizeList(): iSortedCategory[] {
-  let sortedList: iSortedCategory[] = [];
+    let sortedList: iSortedCategory[] = [];
 
-  const categories = this.list.categories;
+    const categories = this.list.categories;
 
-  for (let category of categories) {
-    let sortedCategory: iSortedCategory = {
-      "category": category,
-      "entries": new Map()
-    };
+    for (let category of categories) {
+      let sortedCategory: iSortedCategory = {
+        "category": category,
+        "entries": new Map()
+      };
 
-    let others: iEntryData[] = []; // temporary placeholder for OTHERS
-    // grouping by first letter
-    for (let entry of category.entries) {
-      let firstLetter = entry.name.charAt(0).toUpperCase();
+      let others: iEntry[] = []; // temporary placeholder for OTHERS
+      // grouping by first letter
 
-      if (!(/[A-Z]/i).test(firstLetter)) {
-        // no l10n here, it will be done elsewhere
-        firstLetter = "OTHERS";
-        others.push(entry);
-        continue;
+      // for (let entry of this.list.entries)
+      for (let entry of category.entries) {
+        let firstLetter = entry.name.charAt(0).toUpperCase();
+
+        if (!(/[A-Z]/i).test(firstLetter)) {
+          // no l10n here, it will be done elsewhere
+          firstLetter = "OTHERS";
+          others.push(entry);
+          continue;
+        }
+        if (!sortedCategory.entries[firstLetter]) {
+          sortedCategory.entries[firstLetter.toUpperCase()] = [];
+        }
+        sortedCategory.entries[firstLetter].push(entry);
       }
-      if (!sortedCategory.entries[firstLetter]) {
-        sortedCategory.entries[firstLetter.toUpperCase()] = [];
+      if (others.length > 0) {
+        sortedCategory.entries["OTHERS"] = [...others];
       }
-      sortedCategory.entries[firstLetter].push(entry);
+      sortedList.push(sortedCategory);
     }
-    if (others.length > 0) {
-      sortedCategory.entries["OTHERS"] = [...others];
-    }
-    sortedList.push(sortedCategory);
+    return sortedList;
   }
-  return sortedList;
-}
 
   private static sortEntries(categoryId: number): void {
     // just sort given categoryId
