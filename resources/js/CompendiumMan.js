@@ -6,6 +6,7 @@ import ImportError from "./Error/ImportError.js";
 import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
+import Import from "./Import.js";
 class CompendiumMan {
     static get List() {
         return Object.assign({}, this.list);
@@ -47,13 +48,11 @@ class CompendiumMan {
         return false;
     }
     static get EntityIds() {
-        let entities = [];
-        for (let category of this.list.categories) {
-            for (let entry of category.entries) {
-                entities.push(entry.id);
-            }
+        let entries = [];
+        for (let entry of this.list.entries) {
+            entries.push(entry.id);
         }
-        return entities;
+        return entries;
     }
     static getEntryDataById(categoryId, entityId) {
         if (this.hasCategoryById(categoryId)) {
@@ -78,10 +77,9 @@ class CompendiumMan {
         return this.list.nextEntryId++;
     }
     // import and export
-    static import(input) {
+    static import(data) {
         try {
-            // TODO make sure all expected keys exist
-            this.list = input;
+            this.list = Import.readData(data);
         }
         catch (ex) {
             throw new ImportError(ex);
@@ -461,7 +459,8 @@ class CompendiumMan {
 }
 CompendiumMan.list = {
     "categories": [],
-    "_version": 1,
+    "entries": [],
+    "_version": Import.version,
     "nextEntryId": 0,
     "nextCategoryId": 0
 };

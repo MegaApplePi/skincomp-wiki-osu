@@ -1,6 +1,6 @@
 export default class ImportError extends Error {
     constructor(message) {
-        super(`Error while importing. (Malformed JSON?): ${message}`);
+        super(`Import Error: ${message}`);
     }
 }
 //# sourceMappingURL=ImportError.js.map

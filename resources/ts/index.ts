@@ -489,8 +489,7 @@ $controlImport.addEventListener("click", $controlImport_click);
 const importReader: FileReader = new FileReader();
 function importReader_load() {
   try {
-    let result = JSON.parse(importReader.result.toString());
-    CompendiumMan.import(result);
+    CompendiumMan.import(importReader.result.toString());
     updateDisplay();
 
     $import.dataset.hidden = "";

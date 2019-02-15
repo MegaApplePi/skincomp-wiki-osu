@@ -8,6 +8,7 @@ interface iEntryData {
   "author": string;
   "authorLink": string;
   "modes": eModes;
+  "categories": number[];
 }
 
 export default iEntryData;

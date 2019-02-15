@@ -7,9 +7,10 @@ import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
 import iEntryData from "./iEntryData.js";
-import CompendiumList from "./iCompendiumList.js";
+import iCompendiumList from "./iCompendiumList.js";
 import iCategory from "./iCategory.js";
 import iSortedCategory from "./iSortedCategory.js";
+import Import from "./Import.js";
 
 interface CategoryIdNameList {
   "name": string;
@@ -17,14 +18,15 @@ interface CategoryIdNameList {
 }
 
 abstract class CompendiumMan {
-  private static list: CompendiumList = {
+  private static list: iCompendiumList = {
     "categories": [],
-    "_version": 1,
+    "entries": [],
+    "_version": Import.version,
     "nextEntryId": 0,
     "nextCategoryId": 0
   };
 
-  public static get List(): CompendiumList {
+  public static get List(): iCompendiumList {
     return Object.assign({}, this.list);
   }
 
@@ -70,14 +72,12 @@ abstract class CompendiumMan {
   }
 
   private static get EntityIds(): number[] {
-    let entities = [];
+    let entries = [];
 
-    for (let category of this.list.categories) {
-      for (let entry of category.entries) {
-        entities.push(entry.id);
-      }
+    for (let entry of this.list.entries) {
+      entries.push(entry.id);
     }
-    return entities;
+    return entries;
   }
 
   public static getEntryDataById(categoryId: number, entityId: number): iEntryData {
@@ -104,10 +104,9 @@ abstract class CompendiumMan {
   }
 
   // import and export
-  public static import(input: CompendiumList): void {
+  public static import(data: string): void {
     try {
-      // TODO make sure all expected keys exist
-      this.list = input;
+      this.list = Import.readData(data);
     } catch (ex) {
       throw new ImportError(ex);
     }
