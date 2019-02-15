@@ -16,6 +16,7 @@ const $display: HTMLDivElement = document.querySelector(".display");
 
 // controls
 const $controlNewCategory: HTMLDivElement = document.querySelector(".control-new_category");
+const $controlNewEntry: HTMLDivElement = document.querySelector(".control-new_entry");
 const $controlImport: HTMLDivElement = document.querySelector(".control-import");
 const $controlLocale: HTMLSelectElement = document.querySelector("#control-locale");
 const $controlParseMd: HTMLDivElement = document.querySelector(".control-parse-md");
@@ -31,7 +32,7 @@ const $newCategoryCancel: HTMLDivElement = document.querySelector(".new_category
 const $newCategoryStatus: HTMLDivElement = document.querySelector(".new_category-status");
 
 // new entry
-const $newEntryTo: HTMLFormElement = document.querySelector(".new_entry-to");
+const $newEntryCategory: HTMLFieldSetElement = document.querySelector(".new_entry-category");
 const $newEntryName: HTMLFormElement = document.querySelector("#new_entry-name");
 const $newEntryNameLink: HTMLFormElement = document.querySelector("#new_entry-name_link");
 const $newEntryAuthor: HTMLFormElement = document.querySelector("#new_entry-author");
@@ -44,7 +45,7 @@ const $newEntrySubmit: HTMLDivElement = document.querySelector(".new_entry-submi
 const $newEntryCancel: HTMLDivElement = document.querySelector(".new_entry-cancel");
 
 // edit entry
-const $editEntryCategory: HTMLSelectElement = document.querySelector("#edit_entry-category");
+const $editEntryCategory: HTMLSelectElement = document.querySelector(".edit_entry-category");
 const $editEntryName: HTMLInputElement = document.querySelector("#edit_entry-name");
 const $editEntryNameLink: HTMLInputElement = document.querySelector("#edit_entry-name_link");
 const $editEntryAuthor: HTMLInputElement = document.querySelector("#edit_entry-author");
@@ -86,8 +87,25 @@ function updateDisplay(): void {
     $display.firstChild.remove();
   }
   $display.insertAdjacentElement("beforeend", CompendiumMan.getDisplay());
+
+  if ($display.firstChild.firstChild) {
+    delete $controlNewEntry.dataset.disabled;
+  } else {
+    $controlNewEntry.dataset.disabled = "";
+  }
 }
 /* events */
+
+function booleanToCatIds(checkboxes: HTMLInputElement[]): number[] {
+  const categoryIds: number[] = [];
+  for (let checkbox of checkboxes) {
+    if (checkbox.checked) {
+      categoryIds.push(parseInt(checkbox.value, 10));
+    }
+  }
+
+  return categoryIds;
+}
 
 // new entries
 function $newEntrySubmit_click(): void {
@@ -136,9 +154,9 @@ function $newEntrySubmit_click(): void {
 
     let modes: eModes = CompendiumMan.booleansToModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
 
-    let categoryId = parseInt($newEntry.dataset.categoryId, 10);
+    const categoryIds = booleanToCatIds(Array.from($newEntryCategory.querySelectorAll("input[type=checkbox]")));
 
-    CompendiumMan.addEntry(categoryId, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
+    CompendiumMan.addEntry(categoryIds, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
     updateDisplay();
 
     $newEntryName.value = "";
@@ -228,12 +246,12 @@ function resetEditEntry(): void {
 function $editEntrySubmit_click(): void {
   let modes: eModes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
 
-  let oldCategoryId = parseInt($editEntry.dataset.categoryId, 10);
-  let newCategoryId = parseInt($editEntryCategory.value, 10);
+  const categoryIds = booleanToCatIds(Array.from($editEntryCategory.querySelectorAll("input[type=checkbox]")));
+
   let entryId = parseInt($editEntry.dataset.entryId, 10);
 
   // TODO missing validation
-  CompendiumMan.updateEntry(oldCategoryId, newCategoryId, entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
+  CompendiumMan.updateEntry(entryId, categoryIds, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
   updateDisplay();
 
   resetEditEntry();
@@ -400,23 +418,7 @@ function $display_click (event: Event): void {
       // TODO make this a better message
       window.alert(`Failed to delete: ${ex}`);
     }
-  } else if (target.classList.contains("display-category-add_entry")) {
-    delete $newEntry.dataset.hidden;
-    $newEntry.dataset.categoryId = target.parentElement.dataset.categoryId;
-    
-    $newEntryTo.textContent = `Adding to: ${target.dataset.categoryName}`;
-  
-    $newEntryName.value = "";
-    $newEntryAuthor.value = "";
-    $newEntryNameLink.value = "";
-    $newEntryAuthorLink.value = "";
-    $newEntryStandard.checked = false;
-    $newEntryTaiko.checked = false;
-    $newEntryCatch.checked = false;
-    $newEntryMania.checked = false;
   } else if (target.classList.contains("entry-edit")) {
-    $editEntry.dataset.categoryId = (<HTMLElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId;
-
     $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
 
     const categories = CompendiumMan.CategoryIdNameList;
@@ -441,20 +443,28 @@ function $display_click (event: Event): void {
     $editEntryCatch.dataset.value = (eModes.Catch & entryData.modes) ? "true" : "false";
     $editEntryMania.dataset.value = (eModes.Mania & entryData.modes) ? "true" : "false";
 
-    while ($editEntryCategory.firstChild) {
-      $editEntryCategory.firstChild.remove();
+    while ($editEntryCategory.firstElementChild.nextElementSibling) {
+      $editEntryCategory.firstElementChild.nextElementSibling.remove();
     }
 
-    for (let category of categories) {
-      const $option: HTMLOptionElement = document.createElement("option");
-      $option.value = category.id.toString();
-      $option.textContent = category.name[l10n.currentLocale];
+    for (let category of CompendiumMan.List.categories) {
+      const $container: HTMLDivElement = document.createElement("div");
+      $editEntryCategory.insertAdjacentElement("beforeend", $container);
+      
+      const $checkbox: HTMLInputElement = document.createElement("input");
+      $checkbox.type = "checkbox";
+      $checkbox.value = category.id.toString();
+      $checkbox.setAttribute("id", `edit-category-${category.id}`);
+      $container.insertAdjacentElement("beforeend", $checkbox);
+      
+      const $label: HTMLLabelElement = document.createElement("label");
+      $label.textContent = category.name[l10n.currentLocale];
+      $label.setAttribute("for", `edit-category-${category.id}`);
+      $container.insertAdjacentElement("beforeend", $label);
 
-      if ($editEntry.dataset.categoryId === category.id.toString()) {
-        $option.selected = true;
+      if (entryData.categories.includes(category.id)) {
+        $checkbox.checked = true;
       }
-
-      $editEntryCategory.insertAdjacentElement("beforeend", $option);
     }
 
     delete $editEntry.dataset.hidden;
@@ -468,9 +478,8 @@ function $display_click (event: Event): void {
     target.parentElement.dataset.hidden = "";
   } else if (target.classList.contains("entry-delete-yes")) {
     try {
-      let categoryId = parseInt((<HTMLElement>target.parentElement.parentElement.parentElement.parentElement).dataset.categoryId, 10);
       let entryId = parseInt((<HTMLElement>target.parentElement.parentElement).dataset.id, 10);
-      CompendiumMan.deleteEntry(categoryId, entryId);
+      CompendiumMan.deleteEntry(entryId);
       updateDisplay();
     } catch (ex) {
       // TODO make this a better message
@@ -774,6 +783,42 @@ function $controlLocale_change() {
   }
 }
 $controlLocale.addEventListener("change", $controlLocale_change);
+
+function $controlNewEntry_click() {
+  if (!$controlNewEntry.hasAttribute("data-disabled")) {
+    delete $newEntry.dataset.hidden;
+
+    $newEntryName.value = "";
+    $newEntryAuthor.value = "";
+    $newEntryNameLink.value = "";
+    $newEntryAuthorLink.value = "";
+    $newEntryStandard.checked = false;
+    $newEntryTaiko.checked = false;
+    $newEntryCatch.checked = false;
+    $newEntryMania.checked = false;
+
+    while ($newEntryCategory.firstElementChild.nextElementSibling) {
+      $newEntryCategory.firstElementChild.nextElementSibling.remove();
+    }
+
+    for (let category of CompendiumMan.List.categories) {
+      const $container: HTMLDivElement = document.createElement("div");
+      $newEntryCategory.insertAdjacentElement("beforeend", $container);
+      
+      const $checkbox: HTMLInputElement = document.createElement("input");
+      $checkbox.type = "checkbox";
+      $checkbox.value = category.id.toString();
+      $checkbox.setAttribute("id", `new-category-${category.id}`);
+      $container.insertAdjacentElement("beforeend", $checkbox);
+      
+      const $label: HTMLLabelElement = document.createElement("label");
+      $label.textContent = category.name[l10n.currentLocale];
+      $label.setAttribute("for", `new-category-${category.id}`);
+      $container.insertAdjacentElement("beforeend", $label);
+    }
+  }
+}
+$controlNewEntry.addEventListener("click", $controlNewEntry_click);
 
 function window_beforeunload(event: Event) {
   event.preventDefault();

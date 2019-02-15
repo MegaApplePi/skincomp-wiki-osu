@@ -272,7 +272,7 @@ abstract class CompendiumMan {
     }
   }
 
-  public static updateEntry(categoryIds: number[], entryId: number, name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
+  public static updateEntry(entryId: number, categoryIds: number[], name: string, nameLink: string, author: string, authorLink: string, modes: eModes): void {
     for (let id of categoryIds) {
       if (!this.hasCategoryById(id)) {
         throw new CategoryNonexistsError();
@@ -432,12 +432,6 @@ abstract class CompendiumMan {
       const $thActions: HTMLTableHeaderCellElement = document.createElement("th");
       $thActions.textContent = "Actions";
       $trHeading.insertAdjacentElement("beforeend", $thActions);
-
-      const $addEntry: HTMLDivElement = document.createElement("div");
-      $addEntry.classList.add("display-category-add_entry", "button");
-      $addEntry.textContent = "Add Entry";
-      $addEntry.dataset.categoryName = category.name[l10n.currentLocale];
-      $group.insertAdjacentElement("beforeend", $addEntry);
 
       for (let entry of this.list.entries) {
         if (!entry.categories.includes(category.id)) {

@@ -12,6 +12,7 @@ const $parse = document.querySelector(".parse");
 const $display = document.querySelector(".display");
 // controls
 const $controlNewCategory = document.querySelector(".control-new_category");
+const $controlNewEntry = document.querySelector(".control-new_entry");
 const $controlImport = document.querySelector(".control-import");
 const $controlLocale = document.querySelector("#control-locale");
 const $controlParseMd = document.querySelector(".control-parse-md");
@@ -25,7 +26,7 @@ const $newCategorySubmit = document.querySelector(".new_category-submit");
 const $newCategoryCancel = document.querySelector(".new_category-cancel");
 const $newCategoryStatus = document.querySelector(".new_category-status");
 // new entry
-const $newEntryTo = document.querySelector(".new_entry-to");
+const $newEntryCategory = document.querySelector(".new_entry-category");
 const $newEntryName = document.querySelector("#new_entry-name");
 const $newEntryNameLink = document.querySelector("#new_entry-name_link");
 const $newEntryAuthor = document.querySelector("#new_entry-author");
@@ -37,7 +38,7 @@ const $newEntryMania = document.querySelector("#new_entry-mania");
 const $newEntrySubmit = document.querySelector(".new_entry-submit");
 const $newEntryCancel = document.querySelector(".new_entry-cancel");
 // edit entry
-const $editEntryCategory = document.querySelector("#edit_entry-category");
+const $editEntryCategory = document.querySelector(".edit_entry-category");
 const $editEntryName = document.querySelector("#edit_entry-name");
 const $editEntryNameLink = document.querySelector("#edit_entry-name_link");
 const $editEntryAuthor = document.querySelector("#edit_entry-author");
@@ -74,8 +75,23 @@ function updateDisplay() {
         $display.firstChild.remove();
     }
     $display.insertAdjacentElement("beforeend", CompendiumMan.getDisplay());
+    if ($display.firstChild.firstChild) {
+        delete $controlNewEntry.dataset.disabled;
+    }
+    else {
+        $controlNewEntry.dataset.disabled = "";
+    }
 }
 /* events */
+function booleanToCatIds(checkboxes) {
+    const categoryIds = [];
+    for (let checkbox of checkboxes) {
+        if (checkbox.checked) {
+            categoryIds.push(parseInt(checkbox.value, 10));
+        }
+    }
+    return categoryIds;
+}
 // new entries
 function $newEntrySubmit_click() {
     let hasErrors = false;
@@ -118,8 +134,8 @@ function $newEntrySubmit_click() {
     if (!hasErrors) {
         $newEntry.dataset.hidden = "";
         let modes = CompendiumMan.booleansToModes($newEntryStandard.checked, $newEntryTaiko.checked, $newEntryCatch.checked, $newEntryMania.checked);
-        let categoryId = parseInt($newEntry.dataset.categoryId, 10);
-        CompendiumMan.addEntry(categoryId, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
+        const categoryIds = booleanToCatIds(Array.from($newEntryCategory.querySelectorAll("input[type=checkbox]")));
+        CompendiumMan.addEntry(categoryIds, $newEntryName.value, nameLink, $newEntryAuthor.value, authorLink, modes);
         updateDisplay();
         $newEntryName.value = "";
         $newEntryNameLink.value = "";
@@ -198,11 +214,10 @@ function resetEditEntry() {
 }
 function $editEntrySubmit_click() {
     let modes = CompendiumMan.booleansToModes($editEntryStandard.checked, $editEntryTaiko.checked, $editEntryCatch.checked, $editEntryMania.checked);
-    let oldCategoryId = parseInt($editEntry.dataset.categoryId, 10);
-    let newCategoryId = parseInt($editEntryCategory.value, 10);
+    const categoryIds = booleanToCatIds(Array.from($editEntryCategory.querySelectorAll("input[type=checkbox]")));
     let entryId = parseInt($editEntry.dataset.entryId, 10);
     // TODO missing validation
-    CompendiumMan.updateEntry(oldCategoryId, newCategoryId, entryId, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
+    CompendiumMan.updateEntry(entryId, categoryIds, $editEntryName.value, $editEntryNameLink.value, $editEntryAuthor.value, $editEntryAuthorLink.value, modes);
     updateDisplay();
     resetEditEntry();
     $editEntry.dataset.hidden = "";
@@ -351,21 +366,7 @@ function $display_click(event) {
             window.alert(`Failed to delete: ${ex}`);
         }
     }
-    else if (target.classList.contains("display-category-add_entry")) {
-        delete $newEntry.dataset.hidden;
-        $newEntry.dataset.categoryId = target.parentElement.dataset.categoryId;
-        $newEntryTo.textContent = `Adding to: ${target.dataset.categoryName}`;
-        $newEntryName.value = "";
-        $newEntryAuthor.value = "";
-        $newEntryNameLink.value = "";
-        $newEntryAuthorLink.value = "";
-        $newEntryStandard.checked = false;
-        $newEntryTaiko.checked = false;
-        $newEntryCatch.checked = false;
-        $newEntryMania.checked = false;
-    }
     else if (target.classList.contains("entry-edit")) {
-        $editEntry.dataset.categoryId = target.parentElement.parentElement.parentElement.parentElement.dataset.categoryId;
         $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
         const categories = CompendiumMan.CategoryIdNameList;
         const entryData = CompendiumMan.getEntryById(parseInt($editEntry.dataset.entryId, 10));
@@ -386,17 +387,24 @@ function $display_click(event) {
         $editEntryTaiko.dataset.value = (eModes.Taiko & entryData.modes) ? "true" : "false";
         $editEntryCatch.dataset.value = (eModes.Catch & entryData.modes) ? "true" : "false";
         $editEntryMania.dataset.value = (eModes.Mania & entryData.modes) ? "true" : "false";
-        while ($editEntryCategory.firstChild) {
-            $editEntryCategory.firstChild.remove();
+        while ($editEntryCategory.firstElementChild.nextElementSibling) {
+            $editEntryCategory.firstElementChild.nextElementSibling.remove();
         }
-        for (let category of categories) {
-            const $option = document.createElement("option");
-            $option.value = category.id.toString();
-            $option.textContent = category.name[l10n.currentLocale];
-            if ($editEntry.dataset.categoryId === category.id.toString()) {
-                $option.selected = true;
+        for (let category of CompendiumMan.List.categories) {
+            const $container = document.createElement("div");
+            $editEntryCategory.insertAdjacentElement("beforeend", $container);
+            const $checkbox = document.createElement("input");
+            $checkbox.type = "checkbox";
+            $checkbox.value = category.id.toString();
+            $checkbox.setAttribute("id", `edit-category-${category.id}`);
+            $container.insertAdjacentElement("beforeend", $checkbox);
+            const $label = document.createElement("label");
+            $label.textContent = category.name[l10n.currentLocale];
+            $label.setAttribute("for", `edit-category-${category.id}`);
+            $container.insertAdjacentElement("beforeend", $label);
+            if (entryData.categories.includes(category.id)) {
+                $checkbox.checked = true;
             }
-            $editEntryCategory.insertAdjacentElement("beforeend", $option);
         }
         delete $editEntry.dataset.hidden;
     }
@@ -412,9 +420,8 @@ function $display_click(event) {
     }
     else if (target.classList.contains("entry-delete-yes")) {
         try {
-            let categoryId = parseInt(target.parentElement.parentElement.parentElement.parentElement.dataset.categoryId, 10);
             let entryId = parseInt(target.parentElement.parentElement.dataset.id, 10);
-            CompendiumMan.deleteEntry(categoryId, entryId);
+            CompendiumMan.deleteEntry(entryId);
             updateDisplay();
         }
         catch (ex) {
@@ -706,6 +713,36 @@ function $controlLocale_change() {
     }
 }
 $controlLocale.addEventListener("change", $controlLocale_change);
+function $controlNewEntry_click() {
+    if (!$controlNewEntry.hasAttribute("data-disabled")) {
+        delete $newEntry.dataset.hidden;
+        $newEntryName.value = "";
+        $newEntryAuthor.value = "";
+        $newEntryNameLink.value = "";
+        $newEntryAuthorLink.value = "";
+        $newEntryStandard.checked = false;
+        $newEntryTaiko.checked = false;
+        $newEntryCatch.checked = false;
+        $newEntryMania.checked = false;
+        while ($newEntryCategory.firstElementChild.nextElementSibling) {
+            $newEntryCategory.firstElementChild.nextElementSibling.remove();
+        }
+        for (let category of CompendiumMan.List.categories) {
+            const $container = document.createElement("div");
+            $newEntryCategory.insertAdjacentElement("beforeend", $container);
+            const $checkbox = document.createElement("input");
+            $checkbox.type = "checkbox";
+            $checkbox.value = category.id.toString();
+            $checkbox.setAttribute("id", `new-category-${category.id}`);
+            $container.insertAdjacentElement("beforeend", $checkbox);
+            const $label = document.createElement("label");
+            $label.textContent = category.name[l10n.currentLocale];
+            $label.setAttribute("for", `new-category-${category.id}`);
+            $container.insertAdjacentElement("beforeend", $label);
+        }
+    }
+}
+$controlNewEntry.addEventListener("click", $controlNewEntry_click);
 function window_beforeunload(event) {
     event.preventDefault();
     // @ts-ignore required by chrome

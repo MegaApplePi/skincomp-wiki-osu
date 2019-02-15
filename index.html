@@ -11,11 +11,12 @@
     <div class="control">
       <div>
         <div class="control-new_category button">New Category</div>
+        <div class="control-new_entry button" data-disabled>New Entry</div>
         <div class="control-import button">Import</div>
       </div>
       <div>
         <div class="control-locale">
-          <span>Language:</span>
+          <span>Output:</span>
           <select id="control-locale">
             <option value="en">English</option>
             <option value="de">Deutsch</option>
@@ -51,7 +52,9 @@
     <div class="new_entry" data-hidden>
       <div class="new_entry-bg"></div>
       <div class="new_entry-form">
-        <div class="new_entry-to"></div>
+        <fieldset class="new_entry-category">
+          <legend>Categories*</legend>
+        </fieldset>
         <div class="new_entry-name">
           <label for="new_entry-name">Skin Name*:</label>
           <input type="text" id="new_entry-name"/>
@@ -98,10 +101,9 @@
     <div class="edit_entry" data-hidden>
       <div class="edit_entry-bg"></div>
       <div class="edit_entry-form">
-        <div class="edit_entry-category">
-          <label for="edit_entry-category">Category*:</label>
-          <select id="edit_entry-category"></select>
-        </div>
+        <fieldset class="edit_entry-category">
+          <legend>Categories*</legend>
+        </fieldset>
         <div class="edit_entry-name">
           <label for="edit_entry-name">Name*:</label>
           <input type="text" id="edit_entry-name"/>
