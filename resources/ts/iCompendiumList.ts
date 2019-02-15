@@ -1,9 +1,9 @@
 import iCategory from "./iCategory.js";
-import iEntryData from "./iEntryData.js";
+import iEntry from "./iEntry.js";
 
 interface iCompendiumList {
   "categories": iCategory[];
-  "entries": iEntryData[];
+  "entries": iEntry[];
   "nextCategoryId": number;
   "nextEntryId": number;
   "_version": number;

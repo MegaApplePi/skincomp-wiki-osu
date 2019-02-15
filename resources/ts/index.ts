@@ -2,7 +2,7 @@
 import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
-import iEntryData from "./iEntryData.js";
+import iEntry from "./iEntry.js";
 
 /* DOM elements */
 
@@ -421,7 +421,7 @@ function $display_click (event: Event): void {
 
     const categories = CompendiumMan.CategoryIdNameList;
 
-    const entryData: iEntryData = CompendiumMan.getEntryDataById(parseInt($editEntry.dataset.categoryId, 10), parseInt($editEntry.dataset.entryId, 10));
+    const entryData: iEntry = CompendiumMan.getEntryById(parseInt($editEntry.dataset.entryId, 10));
     $editEntryName.value = entryData.name;
     $editEntryNameLink.value = entryData.nameLink;
     $editEntryAuthor.value = entryData.author;
@@ -629,7 +629,7 @@ function parseList(kind: eOutputType) {
       }
 
       for (let entry of item.entries[section]) {
-        let entryData: iEntryData = entry;
+        let entryData: iEntry = entry;
         let modes: Array<string> = [];
 
         if (kind === eOutputType.Markdown) {

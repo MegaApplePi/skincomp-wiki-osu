@@ -368,7 +368,7 @@ function $display_click(event) {
         $editEntry.dataset.categoryId = target.parentElement.parentElement.parentElement.parentElement.dataset.categoryId;
         $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
         const categories = CompendiumMan.CategoryIdNameList;
-        const entryData = CompendiumMan.getEntryDataById(parseInt($editEntry.dataset.categoryId, 10), parseInt($editEntry.dataset.entryId, 10));
+        const entryData = CompendiumMan.getEntryById(parseInt($editEntry.dataset.entryId, 10));
         $editEntryName.value = entryData.name;
         $editEntryNameLink.value = entryData.nameLink;
         $editEntryAuthor.value = entryData.author;

@@ -6,7 +6,7 @@ import ImportError from "./Error/ImportError.js";
 import LocaleNonexistsError from "./Error/LocaleNonexistsError.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
-import iEntryData from "./iEntryData.js";
+import iEntry from "./iEntry.js";
 import iCompendiumList from "./iCompendiumList.js";
 import iCategory from "./iCategory.js";
 import iSortedCategory from "./iSortedCategory.js";

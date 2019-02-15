@@ -1,6 +1,6 @@
 import eModes from "./eModes";
 
-interface iEntryData {
+interface iEntry {
   "id": number;
   // l10n not needed
   "name": string;
@@ -11,4 +11,4 @@ interface iEntryData {
   "categories": number[];
 }
 
-export default iEntryData;
+export default iEntry;
