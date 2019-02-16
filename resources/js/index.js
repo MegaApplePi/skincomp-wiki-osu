@@ -214,7 +214,6 @@ function $newCategoryCancel_click() {
 }
 $newCategoryCancel.addEventListener("click", $newCategoryCancel_click);
 function resetEditEntry() {
-    // TODO need to reset for categories
     $editEntryName.value = "";
     $editEntryNameLink.value = "";
     $editEntryAuthor.value = "";
@@ -286,6 +285,11 @@ function $editEntrySubmit_click() {
 }
 $editEntrySubmit.addEventListener("click", $editEntrySubmit_click);
 function $editEntryReset_click() {
+    let checkboxes = Array.from($editEntryCategory.querySelectorAll("input[type=checkbox]"));
+    for (let checkbox of checkboxes) {
+        checkbox.checked = (checkbox.dataset.value === "true") ? true : false;
+    }
+    $editEntryStandard.checked = ($editEntryStandard.dataset.value === "true") ? true : false;
     $editEntryName.value = $editEntryName.dataset.value;
     $editEntryNameLink.value = $editEntryNameLink.dataset.value;
     $editEntryAuthor.value = $editEntryAuthor.dataset.value;
@@ -430,7 +434,6 @@ function $display_click(event) {
     }
     else if (target.classList.contains("entry-edit")) {
         $editEntry.dataset.entryId = target.parentElement.parentElement.dataset.id;
-        const categories = CompendiumMan.CategoryIdNameList;
         const entryData = CompendiumMan.getEntryById(parseInt($editEntry.dataset.entryId, 10));
         $editEntryName.value = entryData.name;
         $editEntryNameLink.value = entryData.nameLink;
@@ -466,6 +469,10 @@ function $display_click(event) {
             $container.insertAdjacentElement("beforeend", $label);
             if (entryData.categories.includes(category.id)) {
                 $checkbox.checked = true;
+                $checkbox.dataset.value = "true";
+            }
+            else {
+                $checkbox.dataset.value = "false";
             }
         }
         delete $editEntry.dataset.hidden;
