@@ -542,12 +542,12 @@ function $display_click (event: Event): void {
 
     delete $editEntry.dataset.hidden;
   } else if (target.classList.contains("entry-delete")) {
-    target.dataset.disabled = "";
-    (<HTMLElement>target.previousElementSibling).dataset.disabled = "";
+    target.dataset.hidden = "";
+    (<HTMLElement>target.previousElementSibling).dataset.hidden = "";
     delete (<HTMLElement>target.nextElementSibling).dataset.hidden;
   } else if (target.classList.contains("entry-delete-no")) {
-    delete (<HTMLElement>target.parentElement.previousElementSibling).dataset.disabled;
-    delete (<HTMLElement>target.parentElement.previousElementSibling.previousElementSibling).dataset.disabled;
+    delete (<HTMLElement>target.parentElement.previousElementSibling).dataset.hidden;
+    delete (<HTMLElement>target.parentElement.previousElementSibling.previousElementSibling).dataset.hidden;
     target.parentElement.dataset.hidden = "";
   } else if (target.classList.contains("entry-delete-yes")) {
     try {

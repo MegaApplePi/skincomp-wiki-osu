@@ -472,13 +472,13 @@ function $display_click(event) {
         delete $editEntry.dataset.hidden;
     }
     else if (target.classList.contains("entry-delete")) {
-        target.dataset.disabled = "";
-        target.previousElementSibling.dataset.disabled = "";
+        target.dataset.hidden = "";
+        target.previousElementSibling.dataset.hidden = "";
         delete target.nextElementSibling.dataset.hidden;
     }
     else if (target.classList.contains("entry-delete-no")) {
-        delete target.parentElement.previousElementSibling.dataset.disabled;
-        delete target.parentElement.previousElementSibling.previousElementSibling.dataset.disabled;
+        delete target.parentElement.previousElementSibling.dataset.hidden;
+        delete target.parentElement.previousElementSibling.previousElementSibling.dataset.hidden;
         target.parentElement.dataset.hidden = "";
     }
     else if (target.classList.contains("entry-delete-yes")) {
