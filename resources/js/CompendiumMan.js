@@ -168,6 +168,8 @@ class CompendiumMan {
     // entry methods
     static organizeList() {
         let sortedList = [];
+        // sort the list before looping
+        this.sortEntries();
         const categories = this.list.categories;
         for (let category of categories) {
             let sortedCategory = {

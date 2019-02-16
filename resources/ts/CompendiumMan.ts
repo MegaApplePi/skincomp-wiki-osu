@@ -199,6 +199,9 @@ abstract class CompendiumMan {
   public static organizeList(): iSortedCategory[] {
     let sortedList: iSortedCategory[] = [];
 
+    // sort the list before looping
+    this.sortEntries();
+
     const categories = this.list.categories;
 
     for (let category of categories) {
