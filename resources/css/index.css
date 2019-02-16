@@ -38,11 +38,11 @@
     justify-content: space-between;
     margin: 2px 5%;
     user-select: none; }
-    .body .control-locale {
+    .body .control--locale {
       display: inline-flex; }
-      .body .control-locale span {
+      .body .control--locale span {
         margin-right: 2px; }
-  .body .import, .body .export, .body .parse, .body .new_category, .body .new_entry, .body .edit_entry {
+  .body .modal {
     align-items: center;
     display: flex;
     height: 100vh;
@@ -51,7 +51,7 @@
     left: 0;
     top: 0;
     width: 100vw; }
-    .body .import-bg, .body .export-bg, .body .parse-bg, .body .new_category-bg, .body .new_entry-bg, .body .edit_entry-bg {
+    .body .modal-bg {
       background: #eeeeee7f;
       content: "";
       display: block;
@@ -61,7 +61,7 @@
       top: 0;
       width: 100vw;
       z-index: 1; }
-    .body .import-form, .body .export-form, .body .parse-form, .body .new_category-form, .body .new_entry-form, .body .edit_entry-form {
+    .body .modal-form {
       background-color: #fff;
       max-height: 80vh;
       overflow: auto;
@@ -69,29 +69,35 @@
       position: absolute;
       width: 600px;
       z-index: 2; }
-      .body .import-form textarea, .body .export-form textarea, .body .parse-form textarea, .body .new_category-form textarea, .body .new_entry-form textarea, .body .edit_entry-form textarea {
+      .body .modal-form-item {
+        margin: 2px 0;
+        display: flex; }
+        .body .modal-form-item:first-child {
+          margin-top: 0; }
+        .body .modal-form-item:last-child {
+          margin-bottom: 0; }
+      .body .modal-form-input {
+        flex-grow: 1; }
+      .body .modal-form textarea {
         box-sizing: border-box;
         height: 300px;
         resize: none;
         width: 100%; }
-      .body .import-form label, .body .export-form label, .body .parse-form label, .body .new_category-form label, .body .new_entry-form label, .body .edit_entry-form label {
+      .body .modal-form label {
         display: inline-flex;
         width: 160px; }
-      .body .import-form [data-invalid], .body .export-form [data-invalid], .body .parse-form [data-invalid], .body .new_category-form [data-invalid], .body .new_entry-form [data-invalid], .body .edit_entry-form [data-invalid] {
+      .body .modal-form [data-invalid] {
         background-color: #fff1f0; }
-    .body .import-to, .body .export-to, .body .parse-to, .body .new_category-to, .body .new_entry-to, .body .edit_entry-to {
-      font-weight: bold;
-      text-decoration: underline; }
-    .body .import-actions, .body .export-actions, .body .parse-actions, .body .new_category-actions, .body .new_entry-actions, .body .edit_entry-actions {
+      .body .modal-form .export-save {
+        display: inline-flex; }
+    .body .modal-actions {
       margin-top: 4px; }
-    .body .import-status, .body .export-status, .body .parse-status, .body .new_category-status, .body .new_entry-status, .body .edit_entry-status {
+    .body .modal-status {
       height: 1.5em;
       margin-top: 4px; }
-      .body .import-status[data-state="error"], .body .export-status[data-state="error"], .body .parse-status[data-state="error"], .body .new_category-status[data-state="error"], .body .new_entry-status[data-state="error"], .body .edit_entry-status[data-state="error"] {
+      .body .modal-status[data-state="error"] {
         color: #f5222d; }
-    .body .import-save, .body .export-save, .body .parse-save, .body .new_category-save, .body .new_entry-save, .body .edit_entry-save {
-      display: inline-flex; }
-    .body .import-grouped, .body .export-grouped, .body .parse-grouped, .body .new_category-grouped, .body .new_entry-grouped, .body .edit_entry-grouped {
+    .body .modal-grouped {
       display: flex;
       justify-content: space-between; }
   .body .entry-edit {
@@ -136,7 +142,7 @@
         .body .display .category-entry tr th:nth-child(2) {
           width: 50px; }
         .body .display .category-entry tr th:nth-child(3) {
-          width: 105px; }
+          width: 200px; }
       .body .display .category-entry tr td {
         border-bottom: 1px solid #13c2c2; }
 

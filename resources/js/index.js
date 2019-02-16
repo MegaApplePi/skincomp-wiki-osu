@@ -1,4 +1,3 @@
-// TODO clean this up
 import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
@@ -11,13 +10,13 @@ const $export = document.querySelector(".export");
 const $parse = document.querySelector(".parse");
 const $display = document.querySelector(".display");
 // controls
-const $controlNewCategory = document.querySelector(".control-new_category");
-const $controlNewEntry = document.querySelector(".control-new_entry");
-const $controlImport = document.querySelector(".control-import");
+const $controlNewCategory = document.querySelector(".control--new-category");
+const $controlNewEntry = document.querySelector(".control--new-entry");
+const $controlImport = document.querySelector(".control--import");
 const $controlLocale = document.querySelector("#control-locale");
-const $controlParseMd = document.querySelector(".control-parse-md");
-const $controlParseBb = document.querySelector(".control-parse-bb");
-const $controlExport = document.querySelector(".control-export");
+const $controlParseMd = document.querySelector(".control--parse-md");
+const $controlParseBb = document.querySelector(".control--parse-bb");
+const $controlExport = document.querySelector(".control--export");
 // category
 const $newCategory = document.querySelector(".new_category");
 const $newCategoryName = document.querySelector("#new_category-name");

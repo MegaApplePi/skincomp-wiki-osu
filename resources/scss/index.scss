@@ -1,4 +1,3 @@
-// TODO clean this up
 .body {
   margin: 0;
   padding: 0;
@@ -59,7 +58,7 @@
     margin: 2px 5%;
     user-select: none;
 
-    &-locale {
+    &--locale {
       display: inline-flex;
 
       span {
@@ -68,7 +67,7 @@
     }
   }
 
-  .import, .export, .parse, .new_category, .new_entry, .edit_entry {
+  .modal {
     align-items: center;
     display: flex;
     height: 100vh;
@@ -99,6 +98,23 @@
       width: 600px;
       z-index: 2;
 
+      &-item {
+        margin: 2px 0;
+        display: flex;
+  
+        &:first-child {
+          margin-top: 0;
+        }
+  
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+  
+      &-input {
+        flex-grow: 1;
+      }
+
       textarea {
         box-sizing: border-box;
         height: 300px;
@@ -114,11 +130,12 @@
       [data-invalid] {
         background-color: #fff1f0;
       }
-    }
 
-    &-to {
-      font-weight: bold;
-      text-decoration: underline;
+      .export {
+        &-save {
+          display: inline-flex;
+        }
+      }
     }
 
     &-actions {
@@ -132,10 +149,6 @@
       &[data-state="error"] {
         color: #f5222d;
       }
-    }
-
-    &-save {
-      display: inline-flex;
     }
 
     &-grouped {
@@ -158,6 +171,7 @@
       }
     }
   }
+
   .display {
     margin: 0 10%;
     margin-bottom: 50px;
@@ -227,7 +241,7 @@
             }
 
             &:nth-child(3) {
-              width: 105px;
+              width: 200px;
             }
           }
           td {

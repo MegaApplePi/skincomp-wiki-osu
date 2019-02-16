@@ -1,4 +1,3 @@
-// TODO clean this up
 import CompendiumMan from "./CompendiumMan.js";
 import l10n from "./l10n.js";
 import eModes from "./eModes.js";
@@ -15,13 +14,13 @@ const $parse: HTMLDivElement = document.querySelector(".parse");
 const $display: HTMLDivElement = document.querySelector(".display");
 
 // controls
-const $controlNewCategory: HTMLDivElement = document.querySelector(".control-new_category");
-const $controlNewEntry: HTMLDivElement = document.querySelector(".control-new_entry");
-const $controlImport: HTMLDivElement = document.querySelector(".control-import");
+const $controlNewCategory: HTMLDivElement = document.querySelector(".control--new-category");
+const $controlNewEntry: HTMLDivElement = document.querySelector(".control--new-entry");
+const $controlImport: HTMLDivElement = document.querySelector(".control--import");
 const $controlLocale: HTMLSelectElement = document.querySelector("#control-locale");
-const $controlParseMd: HTMLDivElement = document.querySelector(".control-parse-md");
-const $controlParseBb: HTMLDivElement = document.querySelector(".control-parse-bb");
-const $controlExport: HTMLDivElement = document.querySelector(".control-export");
+const $controlParseMd: HTMLDivElement = document.querySelector(".control--parse-md");
+const $controlParseBb: HTMLDivElement = document.querySelector(".control--parse-bb");
+const $controlExport: HTMLDivElement = document.querySelector(".control--export");
 
 // category
 const $newCategory: HTMLDivElement = document.querySelector(".new_category");
