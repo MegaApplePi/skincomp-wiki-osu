@@ -728,6 +728,7 @@ function $parseClose_click() {
 }
 $parseClose.addEventListener("click", $parseClose_click);
 function navUpdate() {
+    $parseOutput.scrollTop = 0;
     $parseSaveto.textContent = files[filesCurrentIndex].category;
     if (!files[filesCurrentIndex - 1]) {
         $parsePrev.textContent = "Last";
